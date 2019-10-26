@@ -56,6 +56,6 @@ public class ExtendActivity extends BaseActivity {
     }
 
     public void customPlayer(View view) {
-        startActivity(new Intent(this, CustomPlayerActivity.class));
+        //startActivity(new Intent(this, CustomPlayerActivity.class));
     }
 }

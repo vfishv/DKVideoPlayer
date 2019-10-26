@@ -5,7 +5,7 @@ import android.view.View;
 import com.dueeeke.dkplayer.R;
 import com.dueeeke.dkplayer.activity.BaseActivity;
 import com.dueeeke.videocontroller.StandardVideoController;
-import com.dueeeke.videoplayer.exo.ExoMediaPlayerFactory;
+//import com.dueeeke.videoplayer.exo.ExoMediaPlayerFactory;
 import com.dueeeke.videoplayer.ijk.IjkPlayerFactory;
 import com.dueeeke.videoplayer.player.AndroidMediaPlayerFactory;
 import com.dueeeke.videoplayer.player.PlayerFactory;
@@ -60,7 +60,7 @@ public class SwitchPlayerActivity extends BaseActivity implements View.OnClickLi
                 factory = AndroidMediaPlayerFactory.create();
                 break;
             case R.id.btn_exo:
-                factory = ExoMediaPlayerFactory.create();
+                //factory = ExoMediaPlayerFactory.create();
                 break;
         }
 

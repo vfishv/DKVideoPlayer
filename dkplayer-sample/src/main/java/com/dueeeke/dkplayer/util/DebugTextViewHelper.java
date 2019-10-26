@@ -3,7 +3,6 @@ package com.dueeeke.dkplayer.util;
 import android.annotation.SuppressLint;
 import android.widget.TextView;
 
-import com.dueeeke.videoplayer.exo.ExoMediaPlayerFactory;
 import com.dueeeke.videoplayer.ijk.IjkPlayerFactory;
 import com.dueeeke.videoplayer.listener.OnVideoViewStateChangeListener;
 import com.dueeeke.videoplayer.player.VideoView;
@@ -116,9 +115,7 @@ public class DebugTextViewHelper implements OnVideoViewStateChangeListener, Runn
     protected String getCurrentPlayer() {
         String player;
         Object playerFactory = Utils.getCurrentPlayerFactory();
-        if (playerFactory instanceof ExoMediaPlayerFactory) {
-            player = "ExoPlayer";
-        } else if (playerFactory instanceof IjkPlayerFactory) {
+        if (playerFactory instanceof IjkPlayerFactory) {
             player = "IjkPlayer";
         } else {
             player = "MediaPlayer";

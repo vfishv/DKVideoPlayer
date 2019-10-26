@@ -19,7 +19,6 @@ import com.dueeeke.dkplayer.activity.pip.PIPDemoActivity;
 import com.dueeeke.dkplayer.util.PIPManager;
 import com.dueeeke.dkplayer.util.Utils;
 import com.dueeeke.dkplayer.util.cache.ProxyVideoCacheManager;
-import com.dueeeke.videoplayer.exo.ExoMediaPlayerFactory;
 import com.dueeeke.videoplayer.ijk.IjkPlayerFactory;
 import com.dueeeke.videoplayer.player.AndroidMediaPlayerFactory;
 import com.dueeeke.videoplayer.player.PlayerFactory;
@@ -55,8 +54,6 @@ public class MainActivity extends BaseActivity {
         String msg = getString(R.string.str_current_player);
         if (playerFactory instanceof IjkPlayerFactory) {
             mCurrentPlayer.setText(msg + "IjkPlayer");
-        } else if (playerFactory instanceof ExoMediaPlayerFactory) {
-            mCurrentPlayer.setText(msg + "ExoPlayer");
         } else {
             mCurrentPlayer.setText(msg + "MediaPlayer");
         }
@@ -102,8 +99,8 @@ public class MainActivity extends BaseActivity {
                         mCurrentPlayer.setText(msg + "IjkPlayer");
                         break;
                     case R.id.exo:
-                        playerFactory = ExoMediaPlayerFactory.create();
-                        mCurrentPlayer.setText(msg + "ExoPlayer");
+                        //playerFactory = ExoMediaPlayerFactory.create();
+                        //mCurrentPlayer.setText(msg + "ExoPlayer");
                         break;
                     case R.id.media:
                         playerFactory = AndroidMediaPlayerFactory.create();

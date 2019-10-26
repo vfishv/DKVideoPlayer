@@ -70,7 +70,7 @@ public class ApiActivity extends BaseActivity {
     }
 
     public void skipToRawOrAssets(View view) {
-        startActivity(new Intent(this, PlayRawAssetsActivity.class));
+        //startActivity(new Intent(this, PlayRawAssetsActivity.class));
     }
 
     public void multiPlayer(View view) {
