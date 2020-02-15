@@ -19,12 +19,24 @@ import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 import android.view.WindowManager;
 
+import androidx.annotation.NonNull;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
 /**
  * 播放器相关工具类
- * Created by Devlin_n on 2017/4/10.
+ * Created by dueeeke on 2017/4/10.
  */
 
-public class PlayerUtils {
+public final class PlayerUtils {
+
+    private PlayerUtils() {
+    }
 
     /**
      * 获取状态栏高度
@@ -33,6 +45,20 @@ public class PlayerUtils {
         int statusBarHeight = 0;
         //获取status_bar_height资源的ID
         int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            //根据资源ID获取响应的尺寸值
+            statusBarHeight = context.getResources().getDimensionPixelSize(resourceId);
+        }
+        return statusBarHeight;
+    }
+
+    /**
+     * 获取竖屏下状态栏高度
+     */
+    public static double getStatusBarHeightPortrait(Context context) {
+        int statusBarHeight = 0;
+        //获取status_bar_height_portrait资源的ID
+        int resourceId = context.getResources().getIdentifier("status_bar_height_portrait", "dimen", "android");
         if (resourceId > 0) {
             //根据资源ID获取响应的尺寸值
             statusBarHeight = context.getResources().getDimensionPixelSize(resourceId);
@@ -98,7 +124,13 @@ public class PlayerUtils {
      * 获取Activity
      */
     public static Activity scanForActivity(Context context) {
-        return context == null ? null : (context instanceof Activity ? (Activity) context : (context instanceof ContextWrapper ? scanForActivity(((ContextWrapper) context).getBaseContext()) : null));
+        if (context == null) return null;
+        if (context instanceof Activity) {
+            return (Activity) context;
+        } else if (context instanceof ContextWrapper) {
+            return scanForActivity(((ContextWrapper) context).getBaseContext());
+        }
+        return null;
     }
 
     /**
@@ -142,7 +174,7 @@ public class PlayerUtils {
     public static final int NETWORK_UNKNOWN = -1;
 
     /**
-     * 判断当前网络类型-1为未知网络0为没有网络连接1网络断开或关闭2为以太网3为WiFi4为2G5为3G6为4G
+     * 判断当前网络类型
      */
     public static int getNetworkType(Context context) {
         //改为context.getApplicationContext()，防止在Android 6.0上发生内存泄漏
@@ -171,7 +203,7 @@ public class PlayerUtils {
         } else if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
             // 移动数据连接,不能与连接共存,如果wifi打开，则自动关闭
             switch (networkInfo.getSubtype()) {
-                    // 2G
+                // 2G
                 case TelephonyManager.NETWORK_TYPE_GPRS:
                 case TelephonyManager.NETWORK_TYPE_EDGE:
                 case TelephonyManager.NETWORK_TYPE_CDMA:
@@ -200,8 +232,11 @@ public class PlayerUtils {
 
     /**
      * 通过反射获取Application
+     *
+     * @deprecated 不在使用，后期谷歌可能封掉改接口
      */
     @SuppressLint("PrivateApi")
+    @Deprecated
     public static Application getApplication() {
         try {
             return (Application) Class.forName("android.app.ActivityThread")
@@ -210,5 +245,45 @@ public class PlayerUtils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * 获取当前系统时间
+     */
+    public static String getCurrentSystemTime() {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        Date date = new Date();
+        return simpleDateFormat.format(date);
+    }
+
+    /**
+     * 格式化时间
+     */
+    public static String stringForTime(int timeMs) {
+        int totalSeconds = timeMs / 1000;
+
+        int seconds = totalSeconds % 60;
+        int minutes = (totalSeconds / 60) % 60;
+        int hours = totalSeconds / 3600;
+
+        if (hours > 0) {
+            return String.format(Locale.getDefault(), "%d:%02d:%02d", hours, minutes, seconds);
+        } else {
+            return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
+        }
+    }
+
+    /**
+     * 获取集合的快照
+     */
+    @NonNull
+    public static <T> List<T> getSnapshot(@NonNull Collection<T> other) {
+        List<T> result = new ArrayList<>(other.size());
+        for (T item : other) {
+            if (item != null) {
+                result.add(item);
+            }
+        }
+        return result;
     }
 }

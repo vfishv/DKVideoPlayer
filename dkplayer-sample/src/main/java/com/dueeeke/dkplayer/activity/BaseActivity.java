@@ -3,17 +3,19 @@ package com.dueeeke.dkplayer.activity;
 import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
-import androidx.core.view.ViewCompat;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowInsets;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
+
 import com.dueeeke.dkplayer.R;
 import com.dueeeke.videoplayer.player.VideoView;
+import com.dueeeke.videoplayer.player.VideoViewManager;
 
 /**
  * 页面以及播放器共有逻辑封装
@@ -40,6 +42,10 @@ public class BaseActivity<T extends VideoView> extends AppCompatActivity {
         return true;
     }
 
+    protected VideoViewManager getVideoViewManager() {
+        return VideoViewManager.instance();
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +66,13 @@ public class BaseActivity<T extends VideoView> extends AppCompatActivity {
 
         initView();
 
+    }
+
+    protected void setTitle(String title) {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setTitle(title);
+        }
     }
 
     protected void initView() {

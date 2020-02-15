@@ -6,10 +6,13 @@ import com.dueeeke.videoplayer.player.VideoViewManager;
 
 /**
  * 日志类
- * Created by Devlin_n on 2017/6/5.
+ * Created by dueeeke on 2017/6/5.
  */
 
-public class L {
+public final class L {
+
+    private L() {
+    }
 
     private static final String TAG = "DKPlayer";
 
@@ -34,9 +37,9 @@ public class L {
         }
     }
 
-    public static void w(Throwable e) {
+    public static void w(String msg) {
         if (isDebug) {
-            Log.w(TAG, e);
+            Log.w(TAG, msg);
         }
     }
 

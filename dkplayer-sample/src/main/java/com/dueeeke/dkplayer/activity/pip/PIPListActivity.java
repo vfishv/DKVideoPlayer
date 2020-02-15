@@ -1,22 +1,27 @@
 package com.dueeeke.dkplayer.activity.pip;
 
-import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
+import android.content.pm.ActivityInfo;
+import android.view.View;
+
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.FrameLayout;
 
-import com.bumptech.glide.Glide;
 import com.dueeeke.dkplayer.R;
-import com.dueeeke.dkplayer.adapter.FloatRecyclerViewAdapter;
+import com.dueeeke.dkplayer.activity.BaseActivity;
+import com.dueeeke.dkplayer.adapter.VideoRecyclerViewAdapter;
+import com.dueeeke.dkplayer.adapter.listener.OnItemChildClickListener;
 import com.dueeeke.dkplayer.bean.VideoBean;
 import com.dueeeke.dkplayer.util.DataUtil;
 import com.dueeeke.dkplayer.util.PIPManager;
+import com.dueeeke.dkplayer.util.Tag;
+import com.dueeeke.dkplayer.util.Utils;
 import com.dueeeke.videocontroller.StandardVideoController;
+import com.dueeeke.videocontroller.component.CompleteView;
+import com.dueeeke.videocontroller.component.ErrorView;
+import com.dueeeke.videocontroller.component.GestureView;
+import com.dueeeke.videocontroller.component.TitleView;
+import com.dueeeke.videocontroller.component.VodControlView;
 import com.dueeeke.videoplayer.player.VideoView;
 import com.yanzhenjie.permission.AndPermission;
 
@@ -24,75 +29,72 @@ import java.util.List;
 
 /**
  * 悬浮播放终极版
- * Created by Devlin_n on 2017/5/31.
+ * Created by dueeeke on 2017/5/31.
  */
 
-public class PIPListActivity extends AppCompatActivity implements FloatRecyclerViewAdapter.OnChildViewClickListener {
+public class PIPListActivity extends BaseActivity implements OnItemChildClickListener {
 
-    private FrameLayout mPlayer, mThumb;
     private PIPManager mPIPManager;
     private VideoView mVideoView;
-    private StandardVideoController mStandardVideoController;
-    private List<VideoBean> mVideoList;
+    private StandardVideoController mController;
+    private List<VideoBean> mVideos;
+    private LinearLayoutManager mLinearLayoutManager;
+    private TitleView mTitleView;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_recycler_view);
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setTitle(R.string.str_pip_in_list);
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
+    protected int getTitleResId() {
+        return R.string.str_pip_in_list;
+    }
+
+    @Override
+    protected int getLayoutResId() {
+        return R.layout.fragment_recycler_view;
+    }
+
+    @Override
+    protected void initView() {
         mPIPManager = PIPManager.getInstance();
-        mVideoView = mPIPManager.getVideoView();
-        mStandardVideoController = new StandardVideoController(this);
-        initView();
+        mVideoView = getVideoViewManager().get(Tag.PIP);
+        mController = new StandardVideoController(this);
+        addControlComponent();
+
+        initRecyclerView();
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            finish();
-        }
-        return super.onOptionsItemSelected(item);
+    private void addControlComponent() {
+        CompleteView completeView = new CompleteView(this);
+        ErrorView errorView = new ErrorView(this);
+        mTitleView = new TitleView(this);
+        mController.addControlComponent(completeView, errorView, mTitleView);
+        mController.addControlComponent(new VodControlView(this));
+        mController.addControlComponent(new GestureView(this));
     }
 
-    private void initView() {
+    private void initRecyclerView() {
         RecyclerView recyclerView = findViewById(R.id.rv);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mVideoList = DataUtil.getVideoList();
-        FloatRecyclerViewAdapter floatRecyclerViewAdapter = new FloatRecyclerViewAdapter(mVideoList);
-        floatRecyclerViewAdapter.setOnChildViewClickListener(this);
-        recyclerView.setAdapter(floatRecyclerViewAdapter);
+        mLinearLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(mLinearLayoutManager);
+        mVideos = DataUtil.getVideoList();
+        VideoRecyclerViewAdapter adapter = new VideoRecyclerViewAdapter(mVideos);
+        adapter.setOnItemChildClickListener(this);
+        recyclerView.setAdapter(adapter);
         recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
             @Override
-            public void onChildViewAttachedToWindow(View view) {
-                FrameLayout player = view.findViewById(R.id.player_container);
-                FrameLayout thumb = view.findViewById(R.id.layout_thumb);
-                if (player == null || thumb == null) return;
-                int position = (int) player.getTag(R.id.key_position);
+            public void onChildViewAttachedToWindow(@NonNull View view) {
+                VideoRecyclerViewAdapter.VideoHolder holder = (VideoRecyclerViewAdapter.VideoHolder) view.getTag();
+                int position = holder.mPosition;
                 if (position == mPIPManager.getPlayingPosition()) {
-                    mPIPManager.stopFloatWindow();
-                    thumb.setVisibility(View.GONE);
-                    mStandardVideoController.setPlayState(mVideoView.getCurrentPlayState());
-                    mStandardVideoController.setPlayerState(mVideoView.getCurrentPlayerState());
-                    mVideoView.setVideoController(mStandardVideoController);
-                    player.addView(mVideoView);
-                    mThumb = thumb;
-                    mPlayer = player;
+                    startPlay(position, false);
                 }
             }
 
             @Override
-            public void onChildViewDetachedFromWindow(View view) {
-                FrameLayout player = view.findViewById(R.id.player_container);
-                FrameLayout thumb = view.findViewById(R.id.layout_thumb);
-                if (player == null || thumb == null) return;
-                int position = (int) player.getTag(R.id.key_position);
+            public void onChildViewDetachedFromWindow(@NonNull View view) {
+                VideoRecyclerViewAdapter.VideoHolder holder = (VideoRecyclerViewAdapter.VideoHolder) view.getTag();
+                int position = holder.mPosition;
                 if (position == mPIPManager.getPlayingPosition()) {
-                    if (mThumb != null) mThumb.setVisibility(View.VISIBLE);
                     startFloatWindow();
+                    mController.setPlayState(VideoView.STATE_IDLE);
                 }
             }
         });
@@ -137,24 +139,47 @@ public class PIPListActivity extends AppCompatActivity implements FloatRecyclerV
     }
 
     @Override
-    public void onChildViewClick(View itemView, View childView, int position) {
-        if (mPIPManager.getPlayingPosition() == position) return;
-        if (mPIPManager.isStartFloatWindow()) mPIPManager.stopFloatWindow();
-        if (mPlayer != null) mPlayer.removeAllViews();
-        if (mThumb != null) mThumb.setVisibility(View.VISIBLE);
-        FrameLayout player = itemView.findViewById(R.id.player_container);
-        FrameLayout thumb = itemView.findViewById(R.id.layout_thumb);
-        VideoBean videoBean = mVideoList.get(position);
-        mVideoView.release();
-        mVideoView.setUrl(videoBean.getUrl());
-        Glide.with(this).load(videoBean.getThumb()).into(mStandardVideoController.getThumb());
-        mVideoView.setVideoController(mStandardVideoController);
-        mVideoView.start();
-        player.addView(mVideoView);
-        thumb.setVisibility(View.GONE);
-        mPIPManager.setPlayingPosition(position);
-        mPlayer = player;
-        mThumb = thumb;
+    public void onItemChildClick(int position) {
+        startPlay(position, true);
+    }
 
+    /**
+     * 开始播放
+     *
+     * @param position 列表位置
+     */
+    protected void startPlay(int position, boolean isRelease) {
+        if (mPIPManager.isStartFloatWindow())
+            mPIPManager.stopFloatWindow();
+        if (mPIPManager.getPlayingPosition() != -1 && isRelease) {
+            releaseVideoView();
+        }
+        VideoBean videoBean = mVideos.get(position);
+        mVideoView.setUrl(videoBean.getUrl());
+        mTitleView.setTitle(videoBean.getTitle());
+        View itemView = mLinearLayoutManager.findViewByPosition(position);
+        if (itemView == null) return;
+        //注意：要先设置控制才能去设置控制器的状态。
+        mVideoView.setVideoController(mController);
+        mController.setPlayState(mVideoView.getCurrentPlayState());
+
+        VideoRecyclerViewAdapter.VideoHolder viewHolder = (VideoRecyclerViewAdapter.VideoHolder) itemView.getTag();
+        //把列表中预置的PrepareView添加到控制器中，注意isPrivate此处只能为true。
+        mController.addControlComponent(viewHolder.mPrepareView, true);
+        Utils.removeViewFormParent(mVideoView);
+        viewHolder.mPlayerContainer.addView(mVideoView, 0);
+        mVideoView.start();
+        mPIPManager.setPlayingPosition(position);
+    }
+
+    private void releaseVideoView() {
+        mVideoView.release();
+        if (mVideoView.isFullScreen()) {
+            mVideoView.stopFullScreen();
+        }
+        if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
+        mPIPManager.setPlayingPosition(-1);
     }
 }

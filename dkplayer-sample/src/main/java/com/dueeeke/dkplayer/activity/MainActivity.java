@@ -1,22 +1,22 @@
 package com.dueeeke.dkplayer.activity;
 
-import android.content.Intent;
-import android.text.TextUtils;
+import android.annotation.SuppressLint;
+import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.EditText;
-import android.widget.RadioGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+
 import com.dueeeke.dkplayer.R;
-import com.dueeeke.dkplayer.activity.api.ApiActivity;
-import com.dueeeke.dkplayer.activity.api.PlayerActivity;
-import com.dueeeke.dkplayer.activity.extend.ExtendActivity;
-import com.dueeeke.dkplayer.activity.list.ListActivity;
-import com.dueeeke.dkplayer.activity.pip.PIPDemoActivity;
+import com.dueeeke.dkplayer.fragment.main.ApiFragment;
+import com.dueeeke.dkplayer.fragment.main.ExtensionFragment;
+import com.dueeeke.dkplayer.fragment.main.ListFragment;
+import com.dueeeke.dkplayer.fragment.main.PipFragment;
 import com.dueeeke.dkplayer.util.PIPManager;
+import com.dueeeke.dkplayer.util.Tag;
 import com.dueeeke.dkplayer.util.Utils;
 import com.dueeeke.dkplayer.util.cache.ProxyVideoCacheManager;
 import com.dueeeke.videoplayer.exo.ExoMediaPlayerFactory;
@@ -25,15 +25,17 @@ import com.dueeeke.videoplayer.player.AndroidMediaPlayerFactory;
 import com.dueeeke.videoplayer.player.PlayerFactory;
 import com.dueeeke.videoplayer.player.VideoViewConfig;
 import com.dueeeke.videoplayer.player.VideoViewManager;
+import com.dueeeke.videoplayer.thunder.ThunderMediaPlayerFactory;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
 
-    private EditText editText;
-    private boolean isLive;
-
-    private TextView mCurrentPlayer;
+    private List<Fragment> mFragments = new ArrayList<>();
+    public static int mCurrentIndex;
 
     @Override
     protected int getLayoutResId() {
@@ -48,29 +50,34 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void initView() {
         super.initView();
-        editText = findViewById(R.id.et);
-        mCurrentPlayer = findViewById(R.id.curr_player);
 
-        Object playerFactory = Utils.getCurrentPlayerFactory();
-        String msg = getString(R.string.str_current_player);
-        if (playerFactory instanceof IjkPlayerFactory) {
-            mCurrentPlayer.setText(msg + "IjkPlayer");
-        } else if (playerFactory instanceof ExoMediaPlayerFactory) {
-            mCurrentPlayer.setText(msg + "ExoPlayer");
+        //检测当前是用的哪个播放器
+        Object factory = Utils.getCurrentPlayerFactory();
+        if (factory instanceof ExoMediaPlayerFactory) {
+            setTitle(getResources().getString(R.string.app_name) + " (ExoPlayer)");
+        } else if (factory instanceof IjkPlayerFactory) {
+            setTitle(getResources().getString(R.string.app_name) + " (IjkPlayer)");
+        } else if (factory instanceof AndroidMediaPlayerFactory) {
+            setTitle(getResources().getString(R.string.app_name) + " (MediaPlayer)");
+        } else if (factory instanceof ThunderMediaPlayerFactory) {
+            setTitle(getResources().getString(R.string.app_name) + " (APlayer)");
         } else {
-            mCurrentPlayer.setText(msg + "MediaPlayer");
+            setTitle(getResources().getString(R.string.app_name) + " (unknown)");
         }
 
-        ((RadioGroup) findViewById(R.id.rg)).setOnCheckedChangeListener((group, checkedId) -> {
-            switch (checkedId) {
-                case R.id.vod:
-                    isLive = false;
-                    break;
-                case R.id.live:
-                    isLive = true;
-                    break;
-            }
-        });
+        BottomNavigationView bottomNavigationView = findViewById(R.id.nav_view);
+        bottomNavigationView.setOnNavigationItemSelectedListener(this);
+
+        mFragments.add(new ApiFragment());
+        mFragments.add(new ListFragment());
+        mFragments.add(new ExtensionFragment());
+        mFragments.add(new PipFragment());
+
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.layout_content, mFragments.get(0))
+                .commitAllowingStateLoss();
+
+        mCurrentIndex = 0;
     }
 
     @Override
@@ -86,28 +93,34 @@ public class MainActivity extends BaseActivity {
                     Toast.makeText(this, "清除缓存成功", Toast.LENGTH_SHORT).show();
                 }
                 break;
+            case R.id.cpu_info:
+                CpuInfoActivity.start(this);
+                break;
         }
 
-        if (itemId == R.id.ijk || itemId == R.id.exo || itemId == R.id.media) {
+        if (itemId == R.id.ijk || itemId == R.id.exo || itemId == R.id.media || itemId == R.id.thunder) {
             //切换播放核心，不推荐这么做，我这么写只是为了方便测试
             VideoViewConfig config = VideoViewManager.getConfig();
             try {
                 Field mPlayerFactoryField = config.getClass().getDeclaredField("mPlayerFactory");
                 mPlayerFactoryField.setAccessible(true);
                 PlayerFactory playerFactory = null;
-                String msg = getString(R.string.str_current_player);
                 switch (itemId) {
                     case R.id.ijk:
                         playerFactory = IjkPlayerFactory.create();
-                        mCurrentPlayer.setText(msg + "IjkPlayer");
+                        setTitle(getResources().getString(R.string.app_name) + " (IjkPlayer)");
                         break;
                     case R.id.exo:
                         playerFactory = ExoMediaPlayerFactory.create();
-                        mCurrentPlayer.setText(msg + "ExoPlayer");
+                        setTitle(getResources().getString(R.string.app_name) + " (ExoPlayer)");
                         break;
                     case R.id.media:
                         playerFactory = AndroidMediaPlayerFactory.create();
-                        mCurrentPlayer.setText(msg + "MediaPlayer");
+                        setTitle(getResources().getString(R.string.app_name) + " (MediaPlayer)");
+                        break;
+                    case R.id.thunder:
+                        playerFactory = ThunderMediaPlayerFactory.create();
+                        setTitle(getResources().getString(R.string.app_name) + " (APlayer)");
                         break;
                 }
                 mPlayerFactoryField.set(config, playerFactory);
@@ -125,32 +138,56 @@ public class MainActivity extends BaseActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-    public void playOther(View view) {
-        String url = editText.getText().toString();
-        if (TextUtils.isEmpty(url)) return;
-        Intent intent = new Intent(this, PlayerActivity.class);
-        intent.putExtra("url", url);
-        intent.putExtra("isLive", isLive);
-        startActivity(intent);
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        int index;
+        int itemId = menuItem.getItemId();
+        switch (itemId) {
+            default:
+            case R.id.tab_api:
+                index = 0;
+                break;
+            case R.id.tab_list:
+                index = 1;
+                break;
+            case R.id.tab_extension:
+                index = 2;
+                break;
+            case R.id.tab_pip:
+                index = 3;
+                break;
+        }
+
+        if (mCurrentIndex != index) {
+            //切换tab，释放正在播放的播放器
+            if (mCurrentIndex == 1) {
+                getVideoViewManager().releaseByTag(Tag.LIST);
+                getVideoViewManager().releaseByTag(Tag.SEAMLESS, false);//注意不能移除
+            }
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            Fragment fragment = mFragments.get(index);
+            Fragment curFragment = mFragments.get(mCurrentIndex);
+            if (fragment.isAdded()) {
+                transaction.hide(curFragment).show(fragment);
+            } else {
+                transaction.add(R.id.layout_content, fragment).hide(curFragment);
+            }
+            transaction.commitAllowingStateLoss();
+            mCurrentIndex = index;
+        }
+        return true;
     }
 
-    public void clearUrl(View view) {
-        editText.setText("");
+    @Override
+    public void onBackPressed() {
+        if (getVideoViewManager().onBackPress(Tag.LIST)) return;
+        if (getVideoViewManager().onBackPress(Tag.SEAMLESS)) return;
+        super.onBackPressed();
     }
 
-    public void api(View view) {
-        startActivity(new Intent(this, ApiActivity.class));
-    }
+    @SuppressLint("MissingSuperCall")
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
 
-    public void extend(View view) {
-        startActivity(new Intent(this, ExtendActivity.class));
-    }
-
-    public void list(View view) {
-        startActivity(new Intent(this, ListActivity.class));
-    }
-
-    public void pip(View view) {
-        startActivity(new Intent(this, PIPDemoActivity.class));
     }
 }

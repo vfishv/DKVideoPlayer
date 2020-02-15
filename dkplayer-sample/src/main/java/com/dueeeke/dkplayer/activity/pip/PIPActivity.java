@@ -1,25 +1,27 @@
 package com.dueeeke.dkplayer.activity.pip;
 
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 
 import com.bumptech.glide.Glide;
 import com.dueeeke.dkplayer.R;
+import com.dueeeke.dkplayer.activity.BaseActivity;
+import com.dueeeke.dkplayer.util.DataUtil;
 import com.dueeeke.dkplayer.util.PIPManager;
+import com.dueeeke.dkplayer.util.Tag;
 import com.dueeeke.videocontroller.StandardVideoController;
 import com.dueeeke.videoplayer.player.VideoView;
 import com.yanzhenjie.permission.AndPermission;
 
-public class PIPActivity extends AppCompatActivity{
+public class PIPActivity extends BaseActivity {
+
     private PIPManager mPIPManager;
-//    private static final String URL = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
-    private static final String URL = "http://vfx.mtime.cn/Video/2019/03/12/mp4/190312143927981075.mp4";
-//    private static final String URL = "http://youku163.zuida-bofang.com/20190126/26805_c313a74d/index.m3u8";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -32,8 +34,9 @@ public class PIPActivity extends AppCompatActivity{
         }
         FrameLayout playerContainer = findViewById(R.id.player_container);
         mPIPManager = PIPManager.getInstance();
-        VideoView videoView = mPIPManager.getVideoView();
+        VideoView videoView = getVideoViewManager().get(Tag.PIP);
         StandardVideoController controller = new StandardVideoController(this);
+        controller.addDefaultControlComponent(getString(R.string.str_pip), false);
         videoView.setVideoController(controller);
         if (mPIPManager.isStartFloatWindow()) {
             mPIPManager.stopFloatWindow();
@@ -41,16 +44,12 @@ public class PIPActivity extends AppCompatActivity{
             controller.setPlayState(videoView.getCurrentPlayState());
         } else {
             mPIPManager.setActClass(PIPActivity.class);
-//        int widthPixels = getResources().getDisplayMetrics().widthPixels;
-//        videoView.setLayoutParams(new LinearLayout.LayoutParams(widthPixels, widthPixels / 4 * 3));
+            ImageView thumb = controller.findViewById(R.id.thumb);
             Glide.with(this)
                     .load("http://sh.people.com.cn/NMediaFile/2016/0112/LOCAL201601121344000138197365721.jpg")
-                    .asBitmap()
-                    .animate(R.anim.anim_alpha_in)
                     .placeholder(android.R.color.darker_gray)
-                    .into(controller.getThumb());
-            videoView.setUrl(URL);
-            controller.setTitle("香港卫视");
+                    .into(thumb);
+            videoView.setUrl(DataUtil.SAMPLE_URL);
         }
         playerContainer.addView(videoView);
     }
@@ -95,6 +94,7 @@ public class PIPActivity extends AppCompatActivity{
                 .overlay()
                 .onGranted(data -> {
                     mPIPManager.startFloatWindow();
+                    mPIPManager.resume();
                     finish();
                 })
                 .onDenied(data -> {

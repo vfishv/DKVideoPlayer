@@ -11,26 +11,27 @@ import android.content.res.Configuration;
 import android.graphics.drawable.Icon;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.util.Rational;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import androidx.annotation.DrawableRes;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.dueeeke.dkplayer.R;
+import com.dueeeke.dkplayer.util.DataUtil;
 import com.dueeeke.videocontroller.StandardVideoController;
-import com.dueeeke.videoplayer.listener.OnVideoViewStateChangeListener;
 import com.dueeeke.videoplayer.player.VideoView;
 
 import java.util.ArrayList;
 
 /**
  * Android O PiP demo
- * Created by Devlin_n on 2018/4/24.
+ * Created by dueeeke on 2018/4/24.
  */
 
 @RequiresApi(api = Build.VERSION_CODES.O)
@@ -87,7 +88,7 @@ public class AndroidOPiPActivity extends AppCompatActivity {
     private BroadcastReceiver mReceiver;
 
     private VideoView mVideoView;
-    private StandardVideoController mStandardVideoController;
+    private StandardVideoController mController;
     private int mWidthPixels;
 
     @Override
@@ -98,16 +99,12 @@ public class AndroidOPiPActivity extends AppCompatActivity {
         mWidthPixels = getResources().getDisplayMetrics().widthPixels;
         mVideoView.setLayoutParams(new LinearLayout.LayoutParams(mWidthPixels, mWidthPixels * 9 / 16 + 1));
 
-        mVideoView.setUrl("http://vfx.mtime.cn/Video/2019/03/12/mp4/190312143927981075.mp4");
-        mStandardVideoController = new StandardVideoController(this);
-        mVideoView.setVideoController(mStandardVideoController);
+        mVideoView.setUrl(DataUtil.SAMPLE_URL);
+        mController = new StandardVideoController(this);
+        mController.addDefaultControlComponent(getString(R.string.str_pip_android_o), false);
+        mVideoView.setVideoController(mController);
         mVideoView.start();
-        mVideoView.addOnVideoViewStateChangeListener(new OnVideoViewStateChangeListener() {
-            @Override
-            public void onPlayerStateChanged(int playerState) {
-
-            }
-
+        mVideoView.addOnStateChangeListener(new VideoView.SimpleOnStateChangeListener() {
             @Override
             public void onPlayStateChanged(int playState) {
                 switch (playState) {
@@ -204,7 +201,7 @@ public class AndroidOPiPActivity extends AppCompatActivity {
                                 return;
                             }
 
-                            // This is where we are called back from Picture-in-Picture action
+                            // This is where we are called mBack from Picture-in-Picture action
                             // items.
                             final int controlType = intent.getIntExtra(EXTRA_CONTROL_TYPE, 0);
                             switch (controlType) {
@@ -229,7 +226,7 @@ public class AndroidOPiPActivity extends AppCompatActivity {
             mVideoView.setLayoutParams(new LinearLayout.LayoutParams(
                     mWidthPixels,
                     mWidthPixels * 9 / 16 + 1));
-            mVideoView.setVideoController(mStandardVideoController);
+            mVideoView.setVideoController(mController);
             mVideoView.requestLayout();
         }
     }

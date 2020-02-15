@@ -1,37 +1,36 @@
 package com.dueeeke.dkplayer.activity.extend;
 
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-
 import com.dueeeke.dkplayer.R;
 import com.dueeeke.dkplayer.activity.BaseActivity;
 import com.dueeeke.dkplayer.bean.VideoBean;
 import com.dueeeke.dkplayer.util.DataUtil;
+import com.dueeeke.dkplayer.widget.component.PlayerMonitor;
 import com.dueeeke.videocontroller.StandardVideoController;
-import com.dueeeke.videoplayer.listener.OnVideoViewStateChangeListener;
+import com.dueeeke.videocontroller.component.CompleteView;
+import com.dueeeke.videocontroller.component.ErrorView;
+import com.dueeeke.videocontroller.component.GestureView;
+import com.dueeeke.videocontroller.component.PrepareView;
+import com.dueeeke.videocontroller.component.TitleView;
+import com.dueeeke.videocontroller.component.VodControlView;
 import com.dueeeke.videoplayer.player.VideoView;
-import com.dueeeke.videoplayer.util.PlayerUtils;
 
 import java.util.List;
 
 /**
  * 连续播放一个列表
- * Created by Devlin_n on 2017/4/7.
+ * Created by dueeeke on 2017/4/7.
  */
 
 public class PlayListActivity extends BaseActivity {
 
     private List<VideoBean> data = DataUtil.getVideoList();
 
-    private StandardVideoController mStandardVideoController;
+    private StandardVideoController mController;
+    private TitleView mTitleView;
 
     @Override
-    protected View getContentView() {
-        mVideoView = new VideoView(this);
-        mVideoView.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, PlayerUtils.dp2px(this, 240)));
-        setContentView(mVideoView);
-        return mVideoView;
+    protected int getLayoutResId() {
+        return R.layout.activity_layout_common;
     }
 
     @Override
@@ -42,22 +41,20 @@ public class PlayListActivity extends BaseActivity {
     @Override
     protected void initView() {
         super.initView();
-        mStandardVideoController = new StandardVideoController(this);
+        mVideoView = findViewById(R.id.video_view);
+        mController = new StandardVideoController(this);
+        addControlComponents();
+        mController.addControlComponent(new PlayerMonitor());
 
         //加载第一条数据
         VideoBean videoBean = data.get(0);
         mVideoView.setUrl(videoBean.getUrl());
-        mStandardVideoController.setTitle(videoBean.getTitle());
-        mVideoView.setVideoController(mStandardVideoController);
+        mTitleView.setTitle(videoBean.getTitle());
+        mVideoView.setVideoController(mController);
 
         //监听播放结束
-        mVideoView.addOnVideoViewStateChangeListener(new OnVideoViewStateChangeListener() {
+        mVideoView.addOnStateChangeListener(new VideoView.SimpleOnStateChangeListener() {
             private int mCurrentVideoPosition;
-            @Override
-            public void onPlayerStateChanged(int playerState) {
-
-            }
-
             @Override
             public void onPlayStateChanged(int playState) {
                 if (playState == VideoView.STATE_PLAYBACK_COMPLETED) {
@@ -68,8 +65,8 @@ public class PlayListActivity extends BaseActivity {
                         //重新设置数据
                         VideoBean videoBean = data.get(mCurrentVideoPosition);
                         mVideoView.setUrl(videoBean.getUrl());
-                        mStandardVideoController.setTitle(videoBean.getTitle());
-                        mVideoView.setVideoController(mStandardVideoController);
+                        mTitleView.setTitle(videoBean.getTitle());
+                        mVideoView.setVideoController(mController);
                         //开始播放
                         mVideoView.start();
                     }
@@ -78,5 +75,16 @@ public class PlayListActivity extends BaseActivity {
         });
 
         mVideoView.start();
+    }
+
+    private void addControlComponents() {
+        CompleteView completeView = new CompleteView(this);
+        ErrorView errorView = new ErrorView(this);
+        PrepareView prepareView = new PrepareView(this);
+        prepareView.setClickStart();
+        mTitleView = new TitleView(this);
+        VodControlView vodControlView = new VodControlView(this);
+        GestureView gestureView = new GestureView(this);
+        mController.addControlComponent(completeView, errorView, prepareView, mTitleView, vodControlView, gestureView);
     }
 }

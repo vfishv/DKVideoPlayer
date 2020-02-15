@@ -13,29 +13,41 @@ import android.view.WindowManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.dueeeke.videoplayer.player.VideoView;
 import com.dueeeke.videoplayer.util.PlayerUtils;
+
+import java.util.Map;
 
 /**
  * 包含手势操作的VideoController
- * Created by xinyu on 2018/1/6.
+ * Created by dueeeke on 2018/1/6.
  */
 
-public abstract class GestureVideoController<T extends MediaPlayerControl> extends BaseVideoController<T> implements
-        GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, View.OnTouchListener {
+public abstract class GestureVideoController extends BaseVideoController implements
+        GestureDetector.OnGestureListener,
+        GestureDetector.OnDoubleTapListener,
+        View.OnTouchListener {
 
-    protected GestureDetector mGestureDetector;
-    protected AudioManager mAudioManager;
-    protected boolean mIsGestureEnabled;
-    protected int mStreamVolume;
-    protected float mBrightness;
-    protected int mPosition;
-    protected boolean mNeedSeek;
-    protected boolean mFirstTouch;
-    protected boolean mChangePosition;
-    protected boolean mChangeBrightness;
-    protected boolean mChangeVolume;
+    private GestureDetector mGestureDetector;
+    private AudioManager mAudioManager;
+    private boolean mIsGestureEnabled = true;
+    private int mStreamVolume;
+    private float mBrightness;
+    private int mPosition;
+    private boolean mNeedSeek;
+    private boolean mFirstTouch;
+    private boolean mChangePosition;
+    private boolean mChangeBrightness;
+    private boolean mChangeVolume;
 
-    protected GestureListener mGestureListener;
+    private boolean mCanChangePosition = true;
+
+    private boolean mEnableInNormal;
+
+    private boolean mCanSlide;
+
+    private int mCurPlayState;
+
 
     public GestureVideoController(@NonNull Context context) {
         super(context);
@@ -57,14 +69,67 @@ public abstract class GestureVideoController<T extends MediaPlayerControl> exten
         setOnTouchListener(this);
     }
 
+    /**
+     * 设置是否可以滑动调节进度，默认可以
+     */
+    public void setCanChangePosition(boolean canChangePosition) {
+        mCanChangePosition = canChangePosition;
+    }
+
+    /**
+     * 是否在竖屏模式下开始手势控制，默认关闭
+     */
+    public void setEnableInNormal(boolean enableInNormal) {
+        mEnableInNormal = enableInNormal;
+    }
+
+    /**
+     * 是否开启手势空控制，默认开启，关闭之后，双击播放暂停以及手势调节进度，音量，亮度功能将关闭
+     */
+    public void setGestureEnabled(boolean gestureEnabled) {
+        mIsGestureEnabled = gestureEnabled;
+    }
+
+    @Override
+    public void setPlayerState(int playerState) {
+        super.setPlayerState(playerState);
+        if (playerState == VideoView.PLAYER_NORMAL) {
+            mCanSlide = mEnableInNormal;
+        } else if (playerState == VideoView.PLAYER_FULL_SCREEN) {
+            mCanSlide = true;
+        }
+    }
+
+    @Override
+    public void setPlayState(int playState) {
+        super.setPlayState(playState);
+        mCurPlayState = playState;
+    }
+
+    private boolean isInPlaybackState() {
+        return mControlWrapper != null
+                && mCurPlayState != VideoView.STATE_ERROR
+                && mCurPlayState != VideoView.STATE_IDLE
+                && mCurPlayState != VideoView.STATE_PREPARING
+                && mCurPlayState != VideoView.STATE_PREPARED
+                && mCurPlayState != VideoView.STATE_START_ABORT
+                && mCurPlayState != VideoView.STATE_PLAYBACK_COMPLETED;
+    }
+
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         return mGestureDetector.onTouchEvent(event);
     }
 
+    /**
+     * 手指按下的瞬间
+     */
     @Override
     public boolean onDown(MotionEvent e) {
-        if (!mIsGestureEnabled || PlayerUtils.isEdge(getContext(), e)) return false;
+        if (!isInPlaybackState() //不处于播放状态
+                || !mIsGestureEnabled //关闭了手势
+                || PlayerUtils.isEdge(getContext(), e)) //处于屏幕边沿
+            return true;
         mStreamVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         Activity activity = PlayerUtils.scanForActivity(getContext());
         if (activity == null) {
@@ -79,20 +144,37 @@ public abstract class GestureVideoController<T extends MediaPlayerControl> exten
         return true;
     }
 
+    /**
+     * 单击
+     */
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
-        if (mShowing) {
-            hide();
-        } else {
-            show();
+        if (isInPlaybackState()) {
+            mControlWrapper.toggleShowState();
         }
         return true;
     }
 
+    /**
+     * 双击
+     */
+    @Override
+    public boolean onDoubleTap(MotionEvent e) {
+        if (!isLocked() && isInPlaybackState()) togglePlay();
+        return true;
+    }
+
+    /**
+     * 在屏幕上滑动
+     */
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        if (!mIsGestureEnabled || PlayerUtils.isEdge(getContext(), e1))
-            return false;
+        if (!isInPlaybackState() //不处于播放状态
+                || !mIsGestureEnabled //关闭了手势
+                || !mCanSlide //关闭了滑动手势
+                || isLocked() //锁住了屏幕
+                || PlayerUtils.isEdge(getContext(), e1)) //处于屏幕边沿
+            return true;
         float deltaX = e1.getX() - e2.getX();
         float deltaY = e1.getY() - e2.getY();
         if (mFirstTouch) {
@@ -106,8 +188,19 @@ public abstract class GestureVideoController<T extends MediaPlayerControl> exten
                     mChangeBrightness = true;
                 }
             }
-            if (mGestureListener != null) {
-                mGestureListener.onStartSlide();
+
+            if (mChangePosition) {
+                //根据用户设置是否可以滑动调节进度来决定最终是否可以滑动调节进度
+                mChangePosition = mCanChangePosition;
+            }
+
+            if (mChangePosition || mChangeBrightness || mChangeVolume) {
+                for (Map.Entry<IControlComponent, Boolean> next : mControlComponents.entrySet()) {
+                    IControlComponent component = next.getKey();
+                    if (component instanceof IGestureComponent) {
+                        ((IGestureComponent) component).onStartSlide();
+                    }
+                }
             }
             mFirstTouch = false;
         }
@@ -121,10 +214,80 @@ public abstract class GestureVideoController<T extends MediaPlayerControl> exten
         return true;
     }
 
+    protected void slideToChangePosition(float deltaX) {
+        deltaX = -deltaX;
+        int width = getMeasuredWidth();
+        int duration = (int) mControlWrapper.getDuration();
+        int currentPosition = (int) mControlWrapper.getCurrentPosition();
+        int position = (int) (deltaX / width * 120000 + currentPosition);
+        if (position > duration) position = duration;
+        if (position < 0) position = 0;
+        for (Map.Entry<IControlComponent, Boolean> next : mControlComponents.entrySet()) {
+            IControlComponent component = next.getKey();
+            if (component instanceof IGestureComponent) {
+                ((IGestureComponent) component).onPositionChange(position, currentPosition, duration);
+            }
+        }
+        mPosition = position;
+        mNeedSeek = true;
+    }
+
+    protected void slideToChangeBrightness(float deltaY) {
+        Activity activity = PlayerUtils.scanForActivity(getContext());
+        if (activity == null) return;
+        Window window = activity.getWindow();
+        WindowManager.LayoutParams attributes = window.getAttributes();
+        int height = getMeasuredHeight();
+        if (mBrightness == -1.0f) mBrightness = 0.5f;
+        float brightness = deltaY * 2 / height * 1.0f + mBrightness;
+        if (brightness < 0) {
+            brightness = 0f;
+        }
+        if (brightness > 1.0f) brightness = 1.0f;
+        int percent = (int) (brightness * 100);
+        attributes.screenBrightness = brightness;
+        window.setAttributes(attributes);
+        for (Map.Entry<IControlComponent, Boolean> next : mControlComponents.entrySet()) {
+            IControlComponent component = next.getKey();
+            if (component instanceof IGestureComponent) {
+                ((IGestureComponent) component).onBrightnessChange(percent);
+            }
+        }
+    }
+
+    protected void slideToChangeVolume(float deltaY) {
+        int streamMaxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        int height = getMeasuredHeight();
+        float deltaV = deltaY * 2 / height * streamMaxVolume;
+        float index = mStreamVolume + deltaV;
+        if (index > streamMaxVolume) index = streamMaxVolume;
+        if (index < 0) index = 0;
+        int percent = (int) (index / streamMaxVolume * 100);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, (int) index, 0);
+        for (Map.Entry<IControlComponent, Boolean> next : mControlComponents.entrySet()) {
+            IControlComponent component = next.getKey();
+            if (component instanceof IGestureComponent) {
+                ((IGestureComponent) component).onVolumeChange(percent);
+            }
+        }
+    }
+
     @Override
-    public boolean onDoubleTap(MotionEvent e) {
-        if (!mIsLocked) doPauseResume();
-        return true;
+    public boolean onTouchEvent(MotionEvent event) {
+        boolean detectedUp = event.getAction() == MotionEvent.ACTION_UP;
+        if (!mGestureDetector.onTouchEvent(event) && detectedUp) {
+            for (Map.Entry<IControlComponent, Boolean> next : mControlComponents.entrySet()) {
+                IControlComponent component = next.getKey();
+                if (component instanceof IGestureComponent) {
+                    ((IGestureComponent) component).onStopSlide();
+                }
+            }
+            if (mNeedSeek) {
+                mControlWrapper.seekTo(mPosition);
+                mNeedSeek = false;
+            }
+        }
+        return super.onTouchEvent(event);
     }
 
     @Override
@@ -151,106 +314,5 @@ public abstract class GestureVideoController<T extends MediaPlayerControl> exten
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
         return false;
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        boolean detectedUp = event.getAction() == MotionEvent.ACTION_UP;
-        if (!mGestureDetector.onTouchEvent(event) && detectedUp) {
-            if (mGestureListener != null) {
-                mGestureListener.onStopSlide();
-            }
-            if (mNeedSeek) {
-                mMediaPlayer.seekTo(mPosition);
-                mNeedSeek = false;
-            }
-        }
-        return super.onTouchEvent(event);
-    }
-
-    protected void slideToChangePosition(float deltaX) {
-        deltaX = -deltaX;
-        int width = getMeasuredWidth();
-        int duration = (int) mMediaPlayer.getDuration();
-        int currentPosition = (int) mMediaPlayer.getCurrentPosition();
-        int position = (int) (deltaX / width * 120000 + currentPosition);
-        if (position > duration) position = duration;
-        if (position < 0) position = 0;
-        if (mGestureListener != null) {
-            mGestureListener.onPositionChange(position, currentPosition, duration);
-        }
-        mPosition = position;
-        mNeedSeek = true;
-    }
-
-    protected void slideToChangeBrightness(float deltaY) {
-        Activity activity = PlayerUtils.scanForActivity(getContext());
-        if (activity == null) return;
-        Window window = activity.getWindow();
-        WindowManager.LayoutParams attributes = window.getAttributes();
-        int height = getMeasuredHeight();
-        if (mBrightness == -1.0f) mBrightness = 0.5f;
-        float brightness = deltaY * 2 / height * 1.0f + mBrightness;
-        if (brightness < 0) {
-            brightness = 0f;
-        }
-        if (brightness > 1.0f) brightness = 1.0f;
-        int percent = (int) (brightness * 100);
-        attributes.screenBrightness = brightness;
-        window.setAttributes(attributes);
-        if (mGestureListener != null) {
-            mGestureListener.onBrightnessChange(percent);
-        }
-    }
-
-    protected void slideToChangeVolume(float deltaY) {
-        int streamMaxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        int height = getMeasuredHeight();
-        float deltaV = deltaY * 2 / height * streamMaxVolume;
-        float index = mStreamVolume + deltaV;
-        if (index > streamMaxVolume) index = streamMaxVolume;
-        if (index < 0) index = 0;
-        int percent = (int) (index / streamMaxVolume * 100);
-        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, (int) index, 0);
-        if (mGestureListener != null) {
-            mGestureListener.onVolumeChange(percent);
-        }
-    }
-
-
-    public interface GestureListener {
-        /**
-         * 开始滑动
-         */
-        void onStartSlide();
-
-        /**
-         * 结束滑动
-         */
-        void onStopSlide();
-
-        /**
-         * 滑动调整进度
-         * @param slidePosition 滑动进度
-         * @param currentPosition 当前播放进度
-         * @param duration 视频总长度
-         */
-        void onPositionChange(int slidePosition, int currentPosition, int duration);
-
-        /**
-         * 滑动调整亮度
-         * @param percent 亮度百分比
-         */
-        void onBrightnessChange(int percent);
-
-        /**
-         * 滑动调整音量
-         * @param percent 音量百分比
-         */
-        void onVolumeChange(int percent);
-    }
-
-    public void setGestureListener(GestureListener gestureListener) {
-        mGestureListener = gestureListener;
     }
 }
