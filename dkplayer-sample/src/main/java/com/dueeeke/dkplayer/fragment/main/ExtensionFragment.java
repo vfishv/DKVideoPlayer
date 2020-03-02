@@ -8,7 +8,7 @@ import com.dueeeke.dkplayer.activity.extend.DefinitionPlayerActivity;
 import com.dueeeke.dkplayer.activity.extend.ADActivity;
 import com.dueeeke.dkplayer.activity.extend.CacheActivity;
 import com.dueeeke.dkplayer.activity.extend.CustomIjkPlayerActivity;
-import com.dueeeke.dkplayer.activity.extend.DanmakuActivity;
+//import com.dueeeke.dkplayer.activity.extend.DanmakuActivity;
 import com.dueeeke.dkplayer.activity.extend.FullScreenActivity;
 import com.dueeeke.dkplayer.activity.extend.PadActivity;
 import com.dueeeke.dkplayer.activity.extend.PlayListActivity;
@@ -40,9 +40,9 @@ public class ExtensionFragment extends BaseFragment implements View.OnClickListe
             case R.id.btn_fullscreen:
                 startActivity(new Intent(getActivity(), FullScreenActivity.class));
                 break;
-            case R.id.btn_danmu:
-                startActivity(new Intent(getActivity(), DanmakuActivity.class));
-                break;
+//            case R.id.btn_danmu:
+//                startActivity(new Intent(getActivity(), DanmakuActivity.class));
+//                break;
             case R.id.btn_ad:
                 startActivity(new Intent(getActivity(), ADActivity.class));
                 break;
