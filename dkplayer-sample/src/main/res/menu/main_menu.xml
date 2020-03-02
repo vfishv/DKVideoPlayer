@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
+    <item android:id="@+id/cpu_info"
+        android:title="CPU info"/>
     <item android:id="@+id/close_float_window"
         android:title="关闭悬浮窗"/>
     <item android:id="@+id/clear_cache"
@@ -14,6 +15,8 @@
                 android:title="ExoPlayer"/>
             <item android:id="@+id/media"
                 android:title="MediaPlayer"/>
+            <item android:id="@+id/thunder"
+                android:title="APlayer"/>
         </menu>
     </item>
 </menu>

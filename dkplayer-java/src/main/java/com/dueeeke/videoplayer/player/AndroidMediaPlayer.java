@@ -1,22 +1,26 @@
 package com.dueeeke.videoplayer.player;
 
-import android.app.Application;
+import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.view.Surface;
 import android.view.SurfaceHolder;
-
-import com.dueeeke.videoplayer.util.PlayerUtils;
 
 import java.util.Map;
 
 public class AndroidMediaPlayer extends AbstractPlayer {
 
     protected MediaPlayer mMediaPlayer;
-    private boolean isLooping;
     private int mBufferedPercent;
+    private Context mAppContext;
+    private boolean mIsPreparing;
+
+    public AndroidMediaPlayer(Context context) {
+        mAppContext = context.getApplicationContext();
+    }
 
     @Override
     public void initPlayer() {
@@ -34,10 +38,7 @@ public class AndroidMediaPlayer extends AbstractPlayer {
     @Override
     public void setDataSource(String path, Map<String, String> headers) {
         try {
-            Application application = PlayerUtils.getApplication();
-            if (application != null) {
-                mMediaPlayer.setDataSource(application, Uri.parse(path), headers);
-            }
+            mMediaPlayer.setDataSource(mAppContext, Uri.parse(path), headers);
         } catch (Exception e) {
             mPlayerEventListener.onError();
         }
@@ -82,6 +83,7 @@ public class AndroidMediaPlayer extends AbstractPlayer {
     @Override
     public void prepareAsync() {
         try {
+            mIsPreparing = true;
             mMediaPlayer.prepareAsync();
         } catch (IllegalStateException e) {
             mPlayerEventListener.onError();
@@ -90,10 +92,10 @@ public class AndroidMediaPlayer extends AbstractPlayer {
 
     @Override
     public void reset() {
-        mMediaPlayer.release();
-        initPlayer();
+        mMediaPlayer.reset();
+        mMediaPlayer.setSurface(null);
+        mMediaPlayer.setDisplay(null);
         mMediaPlayer.setVolume(1, 1);
-        mMediaPlayer.setLooping(isLooping);
     }
 
     @Override
@@ -147,12 +149,20 @@ public class AndroidMediaPlayer extends AbstractPlayer {
 
     @Override
     public void setSurface(Surface surface) {
-        mMediaPlayer.setSurface(surface);
+        try {
+            mMediaPlayer.setSurface(surface);
+        } catch (Exception e) {
+            mPlayerEventListener.onError();
+        }
     }
 
     @Override
     public void setDisplay(SurfaceHolder holder) {
-        mMediaPlayer.setDisplay(holder);
+        try {
+            mMediaPlayer.setDisplay(holder);
+        } catch (Exception e) {
+            mPlayerEventListener.onError();
+        }
     }
 
     @Override
@@ -162,23 +172,23 @@ public class AndroidMediaPlayer extends AbstractPlayer {
 
     @Override
     public void setLooping(boolean isLooping) {
-        this.isLooping = isLooping;
         mMediaPlayer.setLooping(isLooping);
     }
 
     @Override
-    public void setEnableMediaCodec(boolean isEnable) {
-        // no support
-    }
-
-    @Override
     public void setOptions() {
-        // no support
     }
 
     @Override
     public void setSpeed(float speed) {
-        // no support
+        // only support above Android M
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                mMediaPlayer.setPlaybackParams(mMediaPlayer.getPlaybackParams().setSpeed(speed));
+            } catch (Exception e) {
+                mPlayerEventListener.onError();
+            }
+        }
     }
 
     @Override
@@ -205,7 +215,15 @@ public class AndroidMediaPlayer extends AbstractPlayer {
     private MediaPlayer.OnInfoListener onInfoListener = new MediaPlayer.OnInfoListener() {
         @Override
         public boolean onInfo(MediaPlayer mp, int what, int extra) {
-            mPlayerEventListener.onInfo(what, extra);
+            //解决MEDIA_INFO_VIDEO_RENDERING_START多次回调问题
+            if (what == AbstractPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+                if (mIsPreparing) {
+                    mPlayerEventListener.onInfo(what, extra);
+                    mIsPreparing = false;
+                }
+            } else {
+                mPlayerEventListener.onInfo(what, extra);
+            }
             return true;
         }
     };

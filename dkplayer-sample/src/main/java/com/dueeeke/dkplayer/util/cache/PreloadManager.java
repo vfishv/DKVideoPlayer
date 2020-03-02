@@ -108,7 +108,7 @@ public class PreloadManager {
      * @param isReverseScroll 列表是否反向滑动
      */
     public void pausePreload(int position, boolean isReverseScroll) {
-        L.d("pausePreload：" + position);
+        L.d("pausePreload：" + position + " isReverseScroll: " + isReverseScroll);
         mIsStartPreload = false;
         for (Map.Entry<String, PreloadTask> next : mPreloadTasks.entrySet()) {
             PreloadTask task = next.getValue();
@@ -132,7 +132,7 @@ public class PreloadManager {
      * @param isReverseScroll 列表是否反向滑动
      */
     public void resumePreload(int position, boolean isReverseScroll) {
-        L.d("resumePreload：" + position);
+        L.d("resumePreload：" + position + " isReverseScroll: " + isReverseScroll);
         mIsStartPreload = true;
         for (Map.Entry<String, PreloadTask> next : mPreloadTasks.entrySet()) {
             PreloadTask task = next.getValue();
@@ -179,13 +179,17 @@ public class PreloadManager {
     }
 
     /**
-     * 获取代理地址
+     * 获取播放地址
      */
     public String getPlayUrl(String rawUrl) {
         PreloadTask task = mPreloadTasks.get(rawUrl);
         if (task != null) {
             task.cancel();
         }
-        return mHttpProxyCacheServer.getProxyUrl(rawUrl);
+        if (isPreloaded(rawUrl)) {
+            return mHttpProxyCacheServer.getProxyUrl(rawUrl);
+        } else {
+            return rawUrl;
+        }
     }
 }

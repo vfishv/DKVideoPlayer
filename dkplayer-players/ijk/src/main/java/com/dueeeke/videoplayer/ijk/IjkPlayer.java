@@ -1,17 +1,17 @@
 package com.dueeeke.videoplayer.ijk;
 
-import android.app.Application;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
 import com.dueeeke.videoplayer.player.AbstractPlayer;
 import com.dueeeke.videoplayer.player.VideoViewManager;
-import com.dueeeke.videoplayer.util.PlayerUtils;
 
 import java.util.Map;
 
@@ -21,9 +21,12 @@ import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 public class IjkPlayer extends AbstractPlayer {
 
     protected IjkMediaPlayer mMediaPlayer;
-    private boolean mIsLooping;
-    private boolean mIsEnableMediaCodec;
     private int mBufferedPercent;
+    private Context mAppContext;
+
+    public IjkPlayer(Context context) {
+        mAppContext = context;
+    }
 
     @Override
     public void initPlayer() {
@@ -54,15 +57,19 @@ public class IjkPlayer extends AbstractPlayer {
     @Override
     public void setDataSource(String path, Map<String, String> headers) {
         try {
-            Application application = PlayerUtils.getApplication();
-            if (application != null) {
-                Uri uri = Uri.parse(path);
-                if (ContentResolver.SCHEME_ANDROID_RESOURCE.equals(uri.getScheme())) {
-                    RawDataSourceProvider rawDataSourceProvider = RawDataSourceProvider.create(application, uri);
-                    mMediaPlayer.setDataSource(rawDataSourceProvider);
-                } else {
-                    mMediaPlayer.setDataSource(application, uri, headers);
+            Uri uri = Uri.parse(path);
+            if (ContentResolver.SCHEME_ANDROID_RESOURCE.equals(uri.getScheme())) {
+                RawDataSourceProvider rawDataSourceProvider = RawDataSourceProvider.create(mAppContext, uri);
+                mMediaPlayer.setDataSource(rawDataSourceProvider);
+            } else {
+                //处理UA问题
+                if (headers != null) {
+                    String userAgent = headers.get("User-Agent");
+                    if (!TextUtils.isEmpty(userAgent)) {
+                        mMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "user_agent", userAgent);
+                    }
                 }
+                mMediaPlayer.setDataSource(mAppContext, uri, headers);
             }
         } catch (Exception e) {
             mPlayerEventListener.onError();
@@ -118,9 +125,7 @@ public class IjkPlayer extends AbstractPlayer {
     public void reset() {
         mMediaPlayer.reset();
         mMediaPlayer.setOnVideoSizeChangedListener(onVideoSizeChangedListener);
-        mMediaPlayer.setLooping(mIsLooping);
         setOptions();
-        setEnableMediaCodec(mIsEnableMediaCodec);
     }
 
     @Override
@@ -189,18 +194,7 @@ public class IjkPlayer extends AbstractPlayer {
 
     @Override
     public void setLooping(boolean isLooping) {
-        this.mIsLooping = isLooping;
         mMediaPlayer.setLooping(isLooping);
-    }
-
-    @Override
-    public void setEnableMediaCodec(boolean isEnable) {
-        mIsEnableMediaCodec = isEnable;
-        int value = isEnable ? 1 : 0;
-        mMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec", value);//开启硬解码
-        mMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-auto-rotate", value);
-        mMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-handle-resolution-change", value);
-        mMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-hevc", value);//开启hevc硬解
     }
 
     @Override

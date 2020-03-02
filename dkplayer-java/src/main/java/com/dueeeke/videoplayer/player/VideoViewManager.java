@@ -1,28 +1,45 @@
 package com.dueeeke.videoplayer.player;
 
-import java.util.ArrayList;
-import java.util.List;
+import android.app.Application;
+
+import com.dueeeke.videoplayer.util.L;
+
+import java.util.LinkedHashMap;
 
 /**
  * 视频播放器管理器，管理当前正在播放的VideoView，以及播放器配置
+ * 你也可以用来保存常驻内存的VideoView，但是要注意通过Application Context创建，
+ * 以免内存泄漏
  */
 public class VideoViewManager {
 
     /**
-     * 当前正在播放的VideoView
+     * 保存VideoView的容器
      */
-    private List<VideoView> mVideoViews = new ArrayList<>();
+    private LinkedHashMap<String, VideoView> mVideoViews = new LinkedHashMap<>();
 
+    /**
+     * 是否在移动网络下直接播放视频
+     */
     private boolean mPlayOnMobileNetwork;
+
+    /**
+     * VideoViewManager实例
+     */
+    private static VideoViewManager sInstance;
+
+    /**
+     * VideoViewConfig实例
+     */
+    private static VideoViewConfig sConfig;
 
     private VideoViewManager() {
         mPlayOnMobileNetwork = getConfig().mPlayOnMobileNetwork;
     }
 
-    private static VideoViewManager sInstance;
-
-    private static VideoViewConfig sConfig;
-
+    /**
+     * 设置VideoViewConfig
+     */
     public static void setConfig(VideoViewConfig config) {
         if (sConfig == null) {
             synchronized (VideoViewConfig.class) {
@@ -33,15 +50,24 @@ public class VideoViewManager {
         }
     }
 
+    /**
+     * 获取VideoViewConfig
+     */
     public static VideoViewConfig getConfig() {
         setConfig(null);
         return sConfig;
     }
 
+    /**
+     * 获取是否在移动网络下直接播放视频配置
+     */
     public boolean playOnMobileNetwork() {
         return mPlayOnMobileNetwork;
     }
 
+    /**
+     * 设置是否在移动网络下直接播放视频
+     */
     public void setPlayOnMobileNetwork(boolean playOnMobileNetwork) {
         mPlayOnMobileNetwork = playOnMobileNetwork;
     }
@@ -57,60 +83,56 @@ public class VideoViewManager {
         return sInstance;
     }
 
-
-    public void addVideoView(VideoView videoView) {
-        mVideoViews.add(videoView);
+    /**
+     * 添加VideoView
+     * @param tag 相同tag的VideoView只会保存一个，如果tag相同则会release并移除前一个
+     */
+    public void add(VideoView videoView, String tag) {
+        if (!(videoView.getContext() instanceof Application)) {
+            L.w("The Context of this VideoView is not an Application Context," +
+                    "you must remove it after release,or it will lead to memory leek.");
+        }
+        VideoView old = get(tag);
+        if (old != null) {
+            old.release();
+            remove(tag);
+        }
+        mVideoViews.put(tag, videoView);
     }
 
-    public void removeVideoView(VideoView videoView) {
-        mVideoViews.remove(videoView);
+    public VideoView get(String tag) {
+        return mVideoViews.get(tag);
     }
 
-    public List<VideoView> getVideoViews() {
-        return mVideoViews;
+    public void remove(String tag) {
+        mVideoViews.remove(tag);
     }
 
-    @Deprecated
-    public void releaseVideoPlayer() {
-        release();
+    public void removeAll() {
+        mVideoViews.clear();
     }
 
-    public void pause() {
-        for (int i = 0; i < mVideoViews.size(); i++) {
-            VideoView vv = mVideoViews.get(i);
-            if (vv != null) {
-                vv.pause();
+    /**
+     * 释放掉和tag关联的VideoView，并将其从VideoViewManager中移除
+     */
+    public void releaseByTag(String tag) {
+        releaseByTag(tag, true);
+    }
+
+    public void releaseByTag(String tag, boolean isRemove) {
+        VideoView videoView = get(tag);
+        if (videoView != null) {
+            videoView.release();
+            if (isRemove) {
+                remove(tag);
             }
         }
     }
 
-    public void resume() {
-        for (int i = 0; i < mVideoViews.size(); i++) {
-            VideoView vv = mVideoViews.get(i);
-            if (vv != null) {
-                vv.resume();
-            }
-        }
+    public boolean onBackPress(String tag) {
+        VideoView videoView = get(tag);
+        if (videoView == null) return false;
+        return videoView.onBackPressed();
     }
 
-    public void release() {
-        for (int i = 0; i < mVideoViews.size(); i++) {
-            VideoView vv = mVideoViews.get(i);
-            if (vv != null) {
-                vv.release();
-                i--;
-            }
-        }
-    }
-
-    public boolean onBackPressed() {
-        for (int i = 0; i < mVideoViews.size(); i++) {
-            VideoView vv = mVideoViews.get(i);
-            if (vv != null) {
-                boolean b = vv.onBackPressed();
-                if (b) return true;
-            }
-        }
-        return false;
-    }
 }

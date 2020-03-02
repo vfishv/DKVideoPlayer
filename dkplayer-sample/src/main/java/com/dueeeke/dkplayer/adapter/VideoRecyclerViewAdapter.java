@@ -1,41 +1,41 @@
 package com.dueeeke.dkplayer.adapter;
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.dueeeke.dkplayer.R;
+import com.dueeeke.dkplayer.adapter.listener.OnItemChildClickListener;
+import com.dueeeke.dkplayer.adapter.listener.OnItemClickListener;
 import com.dueeeke.dkplayer.bean.VideoBean;
-import com.dueeeke.videocontroller.StandardVideoController;
-import com.dueeeke.videoplayer.player.VideoView;
+import com.dueeeke.videocontroller.component.PrepareView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class VideoRecyclerViewAdapter extends RecyclerView.Adapter<VideoRecyclerViewAdapter.VideoHolder> {
 
-    private List<VideoBean> videos = new ArrayList<>();
+    private List<VideoBean> videos;
 
-//    private ProgressManagerImpl mProgressManager;
+    private OnItemChildClickListener mOnItemChildClickListener;
 
-//    private PlayerFactory mPlayerFactory = IjkPlayerFactory.create();
+    private OnItemClickListener mOnItemClickListener;
 
     public VideoRecyclerViewAdapter(List<VideoBean> videos) {
-        this.videos.addAll(videos);
+        this.videos = videos;
     }
 
     @Override
     @NonNull
     public VideoHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_video_auto_play, parent, false);
+        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_video, parent, false);
         return new VideoHolder(itemView);
-
     }
 
     @Override
@@ -43,24 +43,13 @@ public class VideoRecyclerViewAdapter extends RecyclerView.Adapter<VideoRecycler
 
         VideoBean videoBean = videos.get(position);
 
-        ImageView thumb = holder.mController.getThumb();
-        Glide.with(thumb.getContext())
+        Glide.with(holder.mThumb.getContext())
                 .load(videoBean.getThumb())
-                .crossFade()
-                .placeholder(android.R.color.white)
-                .into(thumb);
-        holder.mController.setEnableOrientation(true);
-        holder.mController.setTitle(videoBean.getTitle());
-
-        holder.mVideoView.setUrl(videoBean.getUrl());
-        holder.mVideoView.setVideoController(holder.mController);
-//        //保存播放进度
-//        if (mProgressManager == null)
-//            mProgressManager = new ProgressManagerImpl();
-//        holder.mVideoView.setProgressManager(mProgressManager);
-//        holder.mVideoView.setPlayerFactory(mPlayerFactory);
-
+                .placeholder(android.R.color.darker_gray)
+                .into(holder.mThumb);
         holder.mTitle.setText(videoBean.getTitle());
+
+        holder.mPosition = position;
     }
 
     @Override
@@ -75,19 +64,51 @@ public class VideoRecyclerViewAdapter extends RecyclerView.Adapter<VideoRecycler
         notifyItemRangeChanged(size, videos.size());
     }
 
-    public class VideoHolder extends RecyclerView.ViewHolder {
+    public class VideoHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        private VideoView mVideoView;
-        private StandardVideoController mController;
-        private TextView mTitle;
+        public int mPosition;
+        public FrameLayout mPlayerContainer;
+        public TextView mTitle;
+        public ImageView mThumb;
+        public PrepareView mPrepareView;
 
         VideoHolder(View itemView) {
             super(itemView);
-            mVideoView = itemView.findViewById(R.id.video_player);
-            int widthPixels = itemView.getContext().getResources().getDisplayMetrics().widthPixels;
-            mVideoView.setLayoutParams(new LinearLayout.LayoutParams(widthPixels, widthPixels * 9 / 16 + 1));
-            mController = new StandardVideoController(itemView.getContext());
+            mPlayerContainer = itemView.findViewById(R.id.player_container);
             mTitle = itemView.findViewById(R.id.tv_title);
+            mPrepareView = itemView.findViewById(R.id.prepare_view);
+            mThumb = mPrepareView.findViewById(R.id.thumb);
+            if (mOnItemChildClickListener != null) {
+                mPlayerContainer.setOnClickListener(this);
+            }
+            if (mOnItemClickListener != null) {
+                itemView.setOnClickListener(this);
+            }
+            //通过tag将ViewHolder和itemView绑定
+            itemView.setTag(this);
         }
+
+        @Override
+        public void onClick(View v) {
+            if (v.getId() == R.id.player_container) {
+                if (mOnItemChildClickListener != null) {
+                    mOnItemChildClickListener.onItemChildClick(mPosition);
+                }
+            } else {
+                if (mOnItemClickListener != null) {
+                    mOnItemClickListener.onItemClick(mPosition);
+                }
+            }
+
+        }
+    }
+
+
+    public void setOnItemChildClickListener(OnItemChildClickListener onItemChildClickListener) {
+        mOnItemChildClickListener = onItemChildClickListener;
+    }
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
+        mOnItemClickListener = onItemClickListener;
     }
 }

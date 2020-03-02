@@ -3,6 +3,9 @@ package com.dueeeke.videoplayer.player;
 
 import androidx.annotation.Nullable;
 
+import com.dueeeke.videoplayer.render.RenderViewFactory;
+import com.dueeeke.videoplayer.render.TextureRenderViewFactory;
+
 /**
  * 播放器全局配置
  */
@@ -13,10 +16,6 @@ public class VideoViewConfig {
     }
 
     public final boolean mPlayOnMobileNetwork;
-
-    public final boolean mEnableMediaCodec;
-
-    public final boolean mUsingSurfaceView;
 
     public final boolean mEnableOrientation;
 
@@ -32,12 +31,14 @@ public class VideoViewConfig {
 
     public final int mScreenScaleType;
 
+    public final RenderViewFactory mRenderViewFactory;
+
+    public final boolean mAdaptCutout;
+
     private VideoViewConfig(Builder builder) {
         mIsEnableLog = builder.mIsEnableLog;
         mEnableOrientation = builder.mEnableOrientation;
-        mUsingSurfaceView = builder.mUsingSurfaceView;
         mPlayOnMobileNetwork = builder.mPlayOnMobileNetwork;
-        mEnableMediaCodec = builder.mEnableMediaCodec;
         mEnableAudioFocus = builder.mEnableAudioFocus;
         mProgressManager = builder.mProgressManager;
         mEnableParallelPlay = builder.mEnableParallelPlay;
@@ -48,6 +49,13 @@ public class VideoViewConfig {
         } else {
             mPlayerFactory = builder.mPlayerFactory;
         }
+        if (builder.mRenderViewFactory == null) {
+            //默认使用TextureView渲染视频
+            mRenderViewFactory = TextureRenderViewFactory.create();
+        } else {
+            mRenderViewFactory = builder.mRenderViewFactory;
+        }
+        mAdaptCutout = builder.mAdaptCutout;
     }
 
 
@@ -55,36 +63,20 @@ public class VideoViewConfig {
 
         private boolean mIsEnableLog;
         private boolean mPlayOnMobileNetwork;
-        private boolean mUsingSurfaceView;
         private boolean mEnableOrientation;
-        private boolean mEnableMediaCodec;
         private boolean mEnableAudioFocus = true;
         private boolean mEnableParallelPlay;
         private ProgressManager mProgressManager;
         private PlayerFactory mPlayerFactory;
         private int mScreenScaleType;
+        private RenderViewFactory mRenderViewFactory;
+        private boolean mAdaptCutout = true;
 
         /**
          * 是否监听设备方向来切换全屏/半屏， 默认不开启
          */
         public Builder setEnableOrientation(boolean enableOrientation) {
             mEnableOrientation = enableOrientation;
-            return this;
-        }
-
-        /**
-         * 是否启用SurfaceView，默认不启用
-         */
-        public Builder setUsingSurfaceView(boolean usingSurfaceView) {
-            mUsingSurfaceView = usingSurfaceView;
-            return this;
-        }
-
-        /**
-         * 是否使用MediaCodec进行解码（硬解码），默认不开启，使用软解
-         */
-        public Builder setEnableMediaCodec(boolean enableMediaCodec) {
-            mEnableMediaCodec = enableMediaCodec;
             return this;
         }
 
@@ -114,7 +106,9 @@ public class VideoViewConfig {
 
         /**
          * 支持多开
+         * @deprecated 此api已经无效，你需要自己去控制同时只有一个VideoView在播放的效果
          */
+        @Deprecated
         public Builder setEnableParallelPlay(boolean enableParallelPlay) {
             mEnableParallelPlay = enableParallelPlay;
             return this;
@@ -141,6 +135,22 @@ public class VideoViewConfig {
          */
         public Builder setScreenScaleType(int screenScaleType) {
             mScreenScaleType = screenScaleType;
+            return this;
+        }
+
+        /**
+         * 自定义RenderView
+         */
+        public Builder setRenderViewFactory(RenderViewFactory renderViewFactory) {
+            mRenderViewFactory = renderViewFactory;
+            return this;
+        }
+
+        /**
+         * 是否适配刘海屏，默认适配
+         */
+        public Builder setAdaptCutout(boolean adaptCutout) {
+            mAdaptCutout = adaptCutout;
             return this;
         }
 
