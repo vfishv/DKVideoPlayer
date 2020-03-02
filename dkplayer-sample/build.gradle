@@ -92,8 +92,8 @@ dependencies {
     implementation project(':dkplayer-java')
     implementation project(':dkplayer-ui')
     implementation project(path: ':dkplayer-players:ijk')
-    implementation project(path: ':dkplayer-players:exo')
-    implementation project(path: ':dkplayer-players:thunder')
+    //implementation project(path: ':dkplayer-players:exo')
+    //implementation project(path: ':dkplayer-players:thunder')
     //缓存
     implementation project(':dkplayer-videocache')
 

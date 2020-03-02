@@ -19,13 +19,11 @@ import com.dueeeke.dkplayer.util.PIPManager;
 import com.dueeeke.dkplayer.util.Tag;
 import com.dueeeke.dkplayer.util.Utils;
 import com.dueeeke.dkplayer.util.cache.ProxyVideoCacheManager;
-import com.dueeeke.videoplayer.exo.ExoMediaPlayerFactory;
 import com.dueeeke.videoplayer.ijk.IjkPlayerFactory;
 import com.dueeeke.videoplayer.player.AndroidMediaPlayerFactory;
 import com.dueeeke.videoplayer.player.PlayerFactory;
 import com.dueeeke.videoplayer.player.VideoViewConfig;
 import com.dueeeke.videoplayer.player.VideoViewManager;
-import com.dueeeke.videoplayer.thunder.ThunderMediaPlayerFactory;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.lang.reflect.Field;
@@ -53,14 +51,15 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         //检测当前是用的哪个播放器
         Object factory = Utils.getCurrentPlayerFactory();
-        if (factory instanceof ExoMediaPlayerFactory) {
-            setTitle(getResources().getString(R.string.app_name) + " (ExoPlayer)");
-        } else if (factory instanceof IjkPlayerFactory) {
+//        if (factory instanceof ExoMediaPlayerFactory) {
+//            setTitle(getResources().getString(R.string.app_name) + " (ExoPlayer)");
+//        } else
+            if (factory instanceof IjkPlayerFactory) {
             setTitle(getResources().getString(R.string.app_name) + " (IjkPlayer)");
         } else if (factory instanceof AndroidMediaPlayerFactory) {
             setTitle(getResources().getString(R.string.app_name) + " (MediaPlayer)");
-        } else if (factory instanceof ThunderMediaPlayerFactory) {
-            setTitle(getResources().getString(R.string.app_name) + " (APlayer)");
+//        } else if (factory instanceof ThunderMediaPlayerFactory) {
+//            setTitle(getResources().getString(R.string.app_name) + " (APlayer)");
         } else {
             setTitle(getResources().getString(R.string.app_name) + " (unknown)");
         }
@@ -110,18 +109,18 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                         playerFactory = IjkPlayerFactory.create();
                         setTitle(getResources().getString(R.string.app_name) + " (IjkPlayer)");
                         break;
-                    case R.id.exo:
-                        playerFactory = ExoMediaPlayerFactory.create();
-                        setTitle(getResources().getString(R.string.app_name) + " (ExoPlayer)");
-                        break;
+//                    case R.id.exo:
+//                        playerFactory = ExoMediaPlayerFactory.create();
+//                        setTitle(getResources().getString(R.string.app_name) + " (ExoPlayer)");
+//                        break;
                     case R.id.media:
                         playerFactory = AndroidMediaPlayerFactory.create();
                         setTitle(getResources().getString(R.string.app_name) + " (MediaPlayer)");
                         break;
-                    case R.id.thunder:
-                        playerFactory = ThunderMediaPlayerFactory.create();
-                        setTitle(getResources().getString(R.string.app_name) + " (APlayer)");
-                        break;
+//                    case R.id.thunder:
+//                        playerFactory = ThunderMediaPlayerFactory.create();
+//                        setTitle(getResources().getString(R.string.app_name) + " (APlayer)");
+//                        break;
                 }
                 mPlayerFactoryField.set(config, playerFactory);
             } catch (Exception e) {

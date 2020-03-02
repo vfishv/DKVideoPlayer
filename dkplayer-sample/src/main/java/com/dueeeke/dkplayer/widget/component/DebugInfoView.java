@@ -16,10 +16,8 @@ import androidx.core.content.ContextCompat;
 import com.dueeeke.dkplayer.util.Utils;
 import com.dueeeke.videoplayer.controller.ControlWrapper;
 import com.dueeeke.videoplayer.controller.IControlComponent;
-import com.dueeeke.videoplayer.exo.ExoMediaPlayerFactory;
 import com.dueeeke.videoplayer.ijk.IjkPlayerFactory;
 import com.dueeeke.videoplayer.player.AndroidMediaPlayerFactory;
-import com.dueeeke.videoplayer.thunder.ThunderMediaPlayerFactory;
 
 /**
  * 调试信息
@@ -82,14 +80,15 @@ public class DebugInfoView extends AppCompatTextView implements IControlComponen
     protected String getCurrentPlayer() {
         String player;
         Object playerFactory = Utils.getCurrentPlayerFactory();
-        if (playerFactory instanceof ExoMediaPlayerFactory) {
-            player = "ExoPlayer";
-        } else if (playerFactory instanceof IjkPlayerFactory) {
+//        if (playerFactory instanceof ExoMediaPlayerFactory) {
+//            player = "ExoPlayer";
+//        } else
+            if (playerFactory instanceof IjkPlayerFactory) {
             player = "IjkPlayer";
         } else if (playerFactory instanceof AndroidMediaPlayerFactory) {
             player = "MediaPlayer";
-        } else if (playerFactory instanceof ThunderMediaPlayerFactory) {
-            player = "APlayer";
+//        } else if (playerFactory instanceof ThunderMediaPlayerFactory) {
+//            player = "APlayer";
         } else {
             player = "unknown";
         }

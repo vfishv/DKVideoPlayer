@@ -8,9 +8,6 @@ import com.dueeeke.dkplayer.R;
 import com.dueeeke.dkplayer.activity.BaseActivity;
 import com.dueeeke.dkplayer.util.Utils;
 import com.dueeeke.videocontroller.StandardVideoController;
-import com.dueeeke.videoplayer.exo.ExoMediaPlayerFactory;
-import com.google.android.exoplayer2.upstream.DataSpec;
-import com.google.android.exoplayer2.upstream.RawResourceDataSource;
 
 import java.io.IOException;
 
@@ -45,25 +42,27 @@ public class PlayRawAssetsActivity extends BaseActivity {
 
         switch (view.getId()) {
             case R.id.btn_raw:
-                if (playerFactory instanceof ExoMediaPlayerFactory) { //ExoPlayer
-                    DataSpec dataSpec = new DataSpec(RawResourceDataSource.buildRawResourceUri(R.raw.movie));
-                    RawResourceDataSource rawResourceDataSource = new RawResourceDataSource(this);
-                    try {
-                        rawResourceDataSource.open(dataSpec);
-                    } catch (RawResourceDataSource.RawResourceDataSourceException e) {
-                        e.printStackTrace();
-                    }
-                    String url = rawResourceDataSource.getUri().toString();
-                    mVideoView.setUrl(url);
-                } else { //MediaPlayer,IjkPlayer
+//                if (playerFactory instanceof ExoMediaPlayerFactory) { //ExoPlayer
+//                    DataSpec dataSpec = new DataSpec(RawResourceDataSource.buildRawResourceUri(R.raw.movie));
+//                    RawResourceDataSource rawResourceDataSource = new RawResourceDataSource(this);
+//                    try {
+//                        rawResourceDataSource.open(dataSpec);
+//                    } catch (RawResourceDataSource.RawResourceDataSourceException e) {
+//                        e.printStackTrace();
+//                    }
+//                    String url = rawResourceDataSource.getUri().toString();
+//                    mVideoView.setUrl(url);
+//                } else
+                    { //MediaPlayer,IjkPlayer
                     String url = "android.resource://" + getPackageName() + "/" + R.raw.movie;
                     mVideoView.setUrl(url);
                 }
                 break;
             case R.id.btn_assets:
-                if (playerFactory instanceof ExoMediaPlayerFactory) { //ExoPlayer
-                    mVideoView.setUrl("file:///android_asset/" + "test.mp4");
-                } else { //MediaPlayer,IjkPlayer
+//                if (playerFactory instanceof ExoMediaPlayerFactory) { //ExoPlayer
+//                    mVideoView.setUrl("file:///android_asset/" + "test.mp4");
+//                } else
+                    { //MediaPlayer,IjkPlayer
                     AssetManager am = getResources().getAssets();
                     AssetFileDescriptor afd = null;
                     try {

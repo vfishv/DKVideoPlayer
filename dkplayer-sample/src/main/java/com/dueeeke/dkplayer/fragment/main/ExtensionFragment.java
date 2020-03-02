@@ -7,7 +7,6 @@ import com.dueeeke.dkplayer.R;
 import com.dueeeke.dkplayer.activity.extend.DefinitionPlayerActivity;
 import com.dueeeke.dkplayer.activity.extend.ADActivity;
 import com.dueeeke.dkplayer.activity.extend.CacheActivity;
-import com.dueeeke.dkplayer.activity.extend.CustomExoPlayerActivity;
 import com.dueeeke.dkplayer.activity.extend.CustomIjkPlayerActivity;
 import com.dueeeke.dkplayer.activity.extend.DanmakuActivity;
 import com.dueeeke.dkplayer.activity.extend.FullScreenActivity;
@@ -56,9 +55,9 @@ public class ExtensionFragment extends BaseFragment implements View.OnClickListe
             case R.id.btn_pad:
                 startActivity(new Intent(getActivity(), PadActivity.class));
                 break;
-            case R.id.btn_custom_exo_player:
-                startActivity(new Intent(getActivity(), CustomExoPlayerActivity.class));
-                break;
+//            case R.id.btn_custom_exo_player:
+//                startActivity(new Intent(getActivity(), CustomExoPlayerActivity.class));
+//                break;
             case R.id.btn_custom_ijk_player:
                 startActivity(new Intent(getActivity(), CustomIjkPlayerActivity.class));
                 break;
