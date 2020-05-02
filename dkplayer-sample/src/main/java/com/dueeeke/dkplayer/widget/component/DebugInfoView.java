@@ -87,8 +87,6 @@ public class DebugInfoView extends AppCompatTextView implements IControlComponen
             player = "IjkPlayer";
         } else if (playerFactory instanceof AndroidMediaPlayerFactory) {
             player = "MediaPlayer";
-//        } else if (playerFactory instanceof ThunderMediaPlayerFactory) {
-//            player = "APlayer";
         } else {
             player = "unknown";
         }
