@@ -69,12 +69,6 @@ android {
     }
 }
 
-repositories {
-    flatDir {
-        dirs project(':dkplayer-players:thunder').file('libs')
-    }
-}
-
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 //    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.0'
