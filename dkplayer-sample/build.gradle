@@ -16,6 +16,8 @@ android {
         versionCode project.ext.releaseVersionCode
         versionName project.ext.releaseVersion
 
+        multiDexEnabled true
+
         ndk {
             //使用abiFilters筛选你需要的so
 //            abiFilters "armeabi-v7a"
@@ -72,6 +74,7 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 //    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
     implementation "androidx.recyclerview:recyclerview:1.1.0"
     implementation "androidx.constraintlayout:constraintlayout:2.0.1"
     implementation "androidx.viewpager2:viewpager2:1.0.0"
