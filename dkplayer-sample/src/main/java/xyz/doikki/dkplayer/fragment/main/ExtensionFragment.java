@@ -7,7 +7,6 @@ import xyz.doikki.dkplayer.R;
 import xyz.doikki.dkplayer.activity.extend.DefinitionPlayerActivity;
 import xyz.doikki.dkplayer.activity.extend.ADActivity;
 import xyz.doikki.dkplayer.activity.extend.CacheActivity;
-import xyz.doikki.dkplayer.activity.extend.CustomExoPlayerActivity;
 import xyz.doikki.dkplayer.activity.extend.CustomIjkPlayerActivity;
 import xyz.doikki.dkplayer.activity.extend.DanmakuActivity;
 import xyz.doikki.dkplayer.activity.extend.FullScreenActivity;
