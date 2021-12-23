@@ -12,7 +12,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import xyz.doikki.dkplayer.R;
 import xyz.doikki.dkplayer.fragment.main.ApiFragment;
-import xyz.doikki.dkplayer.fragment.main.ExtensionFragment;
+//import xyz.doikki.dkplayer.fragment.main.ExtensionFragment;
 import xyz.doikki.dkplayer.fragment.main.ListFragment;
 import xyz.doikki.dkplayer.fragment.main.PipFragment;
 import xyz.doikki.dkplayer.util.PIPManager;
@@ -74,7 +74,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         mFragments.add(new ApiFragment());
         mFragments.add(new ListFragment());
-        mFragments.add(new ExtensionFragment());
+        //mFragments.add(new ExtensionFragment());
         mFragments.add(new PipFragment());
 
         getSupportFragmentManager().beginTransaction()
