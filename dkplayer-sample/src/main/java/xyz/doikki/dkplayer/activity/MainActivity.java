@@ -19,7 +19,6 @@ import xyz.doikki.dkplayer.util.PIPManager;
 import xyz.doikki.dkplayer.util.Tag;
 import xyz.doikki.dkplayer.util.Utils;
 import xyz.doikki.dkplayer.util.cache.ProxyVideoCacheManager;
-import xyz.doikki.videoplayer.exo.ExoMediaPlayerFactory;
 import xyz.doikki.videoplayer.ijk.IjkPlayerFactory;
 import xyz.doikki.videoplayer.player.AndroidMediaPlayerFactory;
 import xyz.doikki.videoplayer.player.PlayerFactory;

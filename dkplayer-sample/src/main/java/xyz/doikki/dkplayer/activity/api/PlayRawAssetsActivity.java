@@ -10,7 +10,6 @@ import xyz.doikki.dkplayer.R;
 import xyz.doikki.dkplayer.activity.BaseActivity;
 import xyz.doikki.dkplayer.util.Utils;
 import xyz.doikki.videocontroller.StandardVideoController;
-import xyz.doikki.videoplayer.exo.ExoMediaPlayerFactory;
 
 /**
  * 播放raw/assets视频
