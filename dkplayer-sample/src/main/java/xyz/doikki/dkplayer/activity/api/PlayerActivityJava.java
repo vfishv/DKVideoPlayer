@@ -32,12 +32,12 @@ import xyz.doikki.videoplayer.util.L;
  * Created by Doikki on 2017/4/7.
  */
 
-public class PlayerActivity extends BaseActivity<VideoView<AbstractPlayer>> {
+public class PlayerActivityJava extends BaseActivity<VideoView<AbstractPlayer>> {
 
     private static final String THUMB = "https://cms-bucket.nosdn.127.net/eb411c2810f04ffa8aaafc42052b233820180418095416.jpeg";
 
     public static void start(Context context, String url, String title, boolean isLive) {
-        Intent intent = new Intent(context, PlayerActivity.class);
+        Intent intent = new Intent(context, PlayerActivityJava.class);
         intent.putExtra(IntentKeys.URL, url);
         intent.putExtra(IntentKeys.IS_LIVE, isLive);
         intent.putExtra(IntentKeys.TITLE, title);
@@ -61,6 +61,7 @@ public class PlayerActivity extends BaseActivity<VideoView<AbstractPlayer>> {
             controller.setEnableOrientation(true);
 
             PrepareView prepareView = new PrepareView(this);//准备播放界面
+            prepareView.setClickStart();
             ImageView thumb = prepareView.findViewById(R.id.thumb);//封面图
             Glide.with(this).load(THUMB).into(thumb);
             controller.addControlComponent(prepareView);
@@ -106,6 +107,8 @@ public class PlayerActivity extends BaseActivity<VideoView<AbstractPlayer>> {
 //            controller.setGestureEnabled(false);
             //适配刘海屏，默认开启
 //            controller.setAdaptCutout(false);
+            //双击播放暂停，默认开启
+//            controller.setDoubleTapTogglePlayEnabled(false);
 
             //在控制器上显示调试信息
             controller.addControlComponent(new DebugInfoView(this));
@@ -252,6 +255,16 @@ public class PlayerActivity extends BaseActivity<VideoView<AbstractPlayer>> {
             case R.id.btn_mute:
                 mVideoView.setMute(!mVideoView.isMute());
                 break;
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        //如果视频还在准备就 activity 就进入了后台，建议直接将 VideoView release
+        //防止进入后台后视频还在播放
+        if (mVideoView.getCurrentPlayState() == VideoView.STATE_PREPARING) {
+            mVideoView.release();
         }
     }
 }
