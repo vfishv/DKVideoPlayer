@@ -3,13 +3,16 @@ apply from: '../constants.gradle'
 
 android {
     compileSdkVersion project.ext.compileSdkVersion
-    buildToolsVersion project.ext.buildToolsVersion
+    //buildToolsVersion project.ext.buildToolsVersion
 
     defaultConfig {
         minSdkVersion project.ext.minSdkVersion
         targetSdkVersion project.ext.targetSdkVersion
     }
     namespace 'xyz.doikki.videocontroller'
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {

@@ -62,7 +62,7 @@ public class PlayerActivityJava extends BaseActivity<VideoView> {
 
             PrepareView prepareView = new PrepareView(this);//准备播放界面
             prepareView.setClickStart();
-            ImageView thumb = prepareView.findViewById(R.id.thumb);//封面图
+            ImageView thumb = prepareView.findViewById(xyz.doikki.videocontroller.R.id.thumb);//封面图
             Glide.with(this).load(THUMB).into(thumb);
             controller.addControlComponent(prepareView);
 

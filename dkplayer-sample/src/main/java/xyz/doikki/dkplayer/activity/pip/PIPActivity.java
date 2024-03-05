@@ -48,7 +48,7 @@ public class PIPActivity extends BaseActivity {
             controller.setPlayState(videoView.getCurrentPlayState());
         } else {
             mPIPManager.setActClass(PIPActivity.class);
-            ImageView thumb = controller.findViewById(R.id.thumb);
+            ImageView thumb = controller.findViewById(xyz.doikki.videocontroller.R.id.thumb);
             Glide.with(this)
                     .load("http://sh.people.com.cn/NMediaFile/2016/0112/LOCAL201601121344000138197365721.jpg")
                     .placeholder(android.R.color.darker_gray)
