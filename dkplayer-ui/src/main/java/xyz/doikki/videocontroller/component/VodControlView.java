@@ -1,5 +1,7 @@
 package xyz.doikki.videocontroller.component;
 
+import static xyz.doikki.videoplayer.util.PlayerUtils.stringForTime;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
@@ -26,8 +28,6 @@ import xyz.doikki.videoplayer.controller.IControlComponent;
 import xyz.doikki.videoplayer.player.VideoView;
 import xyz.doikki.videoplayer.util.PlayerUtils;
 
-import static xyz.doikki.videoplayer.util.PlayerUtils.stringForTime;
-
 /**
  * 点播底部控制栏
  */
@@ -35,12 +35,13 @@ public class VodControlView extends FrameLayout implements IControlComponent, Vi
     
     protected ControlWrapper mControlWrapper;
 
-    private TextView mTotalTime, mCurrTime;
-    private ImageView mFullScreen;
-    private LinearLayout mBottomContainer;
-    private SeekBar mVideoProgress;
-    private ProgressBar mBottomProgress;
-    private ImageView mPlayButton;
+    private final TextView mTotalTime;
+    private final TextView mCurrTime;
+    private final ImageView mFullScreen;
+    private final LinearLayout mBottomContainer;
+    private final SeekBar mVideoProgress;
+    private final ProgressBar mBottomProgress;
+    private final ImageView mPlayButton;
 
     private boolean mIsDragging;
 
@@ -162,8 +163,14 @@ public class VodControlView extends FrameLayout implements IControlComponent, Vi
                 mPlayButton.setSelected(false);
                 break;
             case VideoView.STATE_BUFFERING:
+                mPlayButton.setSelected(mControlWrapper.isPlaying());
+                // 停止刷新进度
+                mControlWrapper.stopProgress();
+                break;
             case VideoView.STATE_BUFFERED:
                 mPlayButton.setSelected(mControlWrapper.isPlaying());
+                //开始刷新进度
+                mControlWrapper.startProgress();
                 break;
         }
     }
