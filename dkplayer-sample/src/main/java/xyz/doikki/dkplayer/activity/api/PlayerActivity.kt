@@ -2,6 +2,7 @@ package xyz.doikki.dkplayer.activity.api
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.text.TextUtils
 import android.view.View
 import android.widget.EditText
@@ -13,19 +14,28 @@ import xyz.doikki.dkplayer.util.IntentKeys
 import xyz.doikki.dkplayer.util.Utils
 import xyz.doikki.dkplayer.widget.component.DebugInfoView
 import xyz.doikki.dkplayer.widget.component.PlayerMonitor
+import xyz.doikki.dkplayer.widget.render.gl2.GLSurfaceRenderView2
+import xyz.doikki.dkplayer.widget.render.gl2.filter.GlFilterGroup
+import xyz.doikki.dkplayer.widget.render.gl2.filter.GlSepiaFilter
+import xyz.doikki.dkplayer.widget.render.gl2.filter.GlSharpenFilter
+import xyz.doikki.dkplayer.widget.render.gl2.filter.GlWatermarkFilter
 import xyz.doikki.videocontroller.StandardVideoController
 import xyz.doikki.videocontroller.component.*
-import xyz.doikki.videoplayer.player.AbstractPlayer
+import xyz.doikki.videoplayer.player.BaseVideoView
 import xyz.doikki.videoplayer.player.VideoView
-import xyz.doikki.videoplayer.player.VideoView.OnStateChangeListener
-import xyz.doikki.videoplayer.player.VideoView.SimpleOnStateChangeListener
+import xyz.doikki.videoplayer.render.IRenderView
+import xyz.doikki.videoplayer.render.RenderViewFactory
 import xyz.doikki.videoplayer.util.L
 
 /**
  * 播放器演示
  * Created by Doikki on 2017/4/7.
  */
-class PlayerActivity : BaseActivity<VideoView<AbstractPlayer>>() {
+class PlayerActivity : BaseActivity<VideoView>() {
+
+    private val renderView by lazy {
+        GLSurfaceRenderView2(this)
+    }
 
     override fun getLayoutResId() = R.layout.activity_player
 
@@ -106,13 +116,29 @@ class PlayerActivity : BaseActivity<VideoView<AbstractPlayer>>() {
             //播放状态监听
             mVideoView.addOnStateChangeListener(mOnStateChangeListener)
 
+            // 临时切换RenderView, 如需全局请通过VideoConfig配置，详见MyApplication
+            if (intent.getBooleanExtra(IntentKeys.CUSTOM_RENDER, false)) {
+//                mVideoView.setRenderViewFactory(GLSurfaceRenderViewFactory.create())
+                mVideoView.setRenderViewFactory(object : RenderViewFactory() {
+                    override fun createRenderView(context: Context?): IRenderView {
+                        return renderView
+                    }
+                })
+                // 设置滤镜
+                renderView.setGlFilter(GlFilterGroup(
+                    // 水印
+                    GlWatermarkFilter(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)),
+                    GlSepiaFilter(),
+                    GlSharpenFilter()
+                ))
+            }
             //临时切换播放核心，如需全局请通过VideoConfig配置，详见MyApplication
             //使用IjkPlayer解码
-//            (mVideoView as VideoView<IjkPlayer>).setPlayerFactory(IjkPlayerFactory.create())
+//            mVideoView.setPlayerFactory(IjkPlayerFactory.create())
             //使用ExoPlayer解码
-//            (mVideoView as VideoView<ExoMediaPlayer>).setPlayerFactory(ExoMediaPlayerFactory.create())
+//            mVideoView.setPlayerFactory(ExoMediaPlayerFactory.create())
             //使用MediaPlayer解码
-//            (mVideoView as VideoView<AndroidMediaPlayer>).setPlayerFactory(AndroidMediaPlayerFactory.create())
+//            mVideoView.setPlayerFactory(AndroidMediaPlayerFactory.create())
 
             //设置静音播放
 //            mVideoView.setMute(true)
@@ -131,8 +157,8 @@ class PlayerActivity : BaseActivity<VideoView<AbstractPlayer>>() {
         }
     }
 
-    private val mOnStateChangeListener: OnStateChangeListener =
-        object : SimpleOnStateChangeListener() {
+    private val mOnStateChangeListener: BaseVideoView.OnStateChangeListener =
+        object : BaseVideoView.SimpleOnStateChangeListener() {
             override fun onPlayerStateChanged(playerState: Int) {
                 when (playerState) {
                     VideoView.PLAYER_NORMAL -> {
@@ -210,11 +236,12 @@ class PlayerActivity : BaseActivity<VideoView<AbstractPlayer>>() {
             "https://cms-bucket.nosdn.127.net/eb411c2810f04ffa8aaafc42052b233820180418095416.jpeg"
 
         @JvmStatic
-        fun start(context: Context, url: String, title: String, isLive: Boolean) {
+        fun start(context: Context, url: String, title: String, isLive: Boolean, customRender: Boolean = false) {
             val intent = Intent(context, PlayerActivity::class.java)
             intent.putExtra(IntentKeys.URL, url)
             intent.putExtra(IntentKeys.IS_LIVE, isLive)
             intent.putExtra(IntentKeys.TITLE, title)
+            intent.putExtra(IntentKeys.CUSTOM_RENDER, customRender)
             context.startActivity(intent)
         }
     }
