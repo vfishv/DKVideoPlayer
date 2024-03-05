@@ -8,7 +8,8 @@ static def releaseTime() {
 
 android {
     compileSdkVersion project.ext.compileSdkVersion
-    buildToolsVersion project.ext.buildToolsVersion
+    //buildToolsVersion project.ext.buildToolsVersion
+    namespace "xyz.doikki.dkplayer"
 
     defaultConfig {
         applicationId "xyz.doikki.dkplayer"
