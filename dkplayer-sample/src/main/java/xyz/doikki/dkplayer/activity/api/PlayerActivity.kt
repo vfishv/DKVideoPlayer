@@ -48,7 +48,7 @@ class PlayerActivity : BaseActivity<VideoView>() {
             controller.setEnableOrientation(true)
             val prepareView = PrepareView(this) //准备播放界面
             prepareView.setClickStart()
-            val thumb = prepareView.findViewById<ImageView>(R.id.thumb) //封面图
+            val thumb = prepareView.findViewById<ImageView>(xyz.doikki.videocontroller.R.id.thumb) //封面图
             Glide.with(this).load(THUMB).into(thumb)
             controller.addControlComponent(prepareView)
             controller.addControlComponent(CompleteView(this)) //自动完成播放界面

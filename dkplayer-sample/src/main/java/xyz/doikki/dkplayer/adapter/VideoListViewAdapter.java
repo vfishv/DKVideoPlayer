@@ -81,7 +81,7 @@ public class VideoListViewAdapter extends BaseAdapter {
             mPlayerContainer = itemView.findViewById(R.id.player_container);
             mTitle = itemView.findViewById(R.id.tv_title);
             mPrepareView = itemView.findViewById(R.id.prepare_view);
-            mThumb = mPrepareView.findViewById(R.id.thumb);
+            mThumb = mPrepareView.findViewById(xyz.doikki.videocontroller.R.id.thumb);
             mPlayerContainer.setOnClickListener(this);
         }
 

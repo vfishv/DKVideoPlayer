@@ -55,7 +55,7 @@ public class PadActivity extends BaseActivity {
     public void onBackPressed() {
         if (mController.isLocked()) {
             mController.show();
-            Toast.makeText(this, R.string.dkplayer_lock_tip, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, xyz.doikki.videocontroller.R.string.dkplayer_lock_tip, Toast.LENGTH_SHORT).show();
             return;
         }
         if (mVideoView.isFullScreen()) {

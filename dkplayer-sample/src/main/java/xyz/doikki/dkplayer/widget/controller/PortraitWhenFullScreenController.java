@@ -106,16 +106,16 @@ public class PortraitWhenFullScreenController extends StandardVideoController {
         int i = v.getId();
         if (i == R.id.fullscreen) {
             toggleFullScreen();
-        } else if (i == R.id.lock) {
+        } else if (i == xyz.doikki.videocontroller.R.id.lock) {
             mControlWrapper.toggleLockState();
-        } else if (i == R.id.iv_play) {
+        } else if (i == xyz.doikki.videocontroller.R.id.iv_play) {
             togglePlay();
-        } else if (i == R.id.back) {
+        } else if (i == xyz.doikki.videocontroller.R.id.back) {
             stopFullScreen();
-        } else if (i == R.id.thumb) {
+        } else if (i == xyz.doikki.videocontroller.R.id.thumb) {
             mControlWrapper.start();
             mControlWrapper.startFullScreen();
-        } else if (i == R.id.iv_replay) {
+        } else if (i == xyz.doikki.videocontroller.R.id.iv_replay) {
             mControlWrapper.replay(true);
             mControlWrapper.startFullScreen();
         }

@@ -3,7 +3,8 @@ apply from: '../../constants.gradle'
 
 android {
     compileSdkVersion project.ext.compileSdkVersion
-    buildToolsVersion project.ext.buildToolsVersion
+    //buildToolsVersion project.ext.buildToolsVersion
+    namespace "xyz.doikki.videoplayer.exo"
 
     defaultConfig {
         minSdkVersion project.ext.minSdkVersion
@@ -16,7 +17,7 @@ android {
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    //implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':dkplayer-java')
     api "com.google.android.exoplayer:exoplayer-core:$project.exoPlayerVersion"
     api "com.google.android.exoplayer:exoplayer-dash:$project.exoPlayerVersion"
