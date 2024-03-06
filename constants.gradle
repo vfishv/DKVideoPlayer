@@ -3,9 +3,9 @@ project.ext {
     releaseVersionCode = 55
 
     minSdkVersion = 16
-    targetSdkVersion = 31
-    compileSdkVersion = 31
-    buildToolsVersion = '33.0.0'
+    targetSdkVersion = 34
+    compileSdkVersion = 34
+    buildToolsVersion = '34.0.0'
 
     exoPlayerVersion = '2.18.1'
 

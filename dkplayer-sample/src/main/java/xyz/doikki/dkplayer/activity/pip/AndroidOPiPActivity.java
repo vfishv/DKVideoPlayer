@@ -110,15 +110,15 @@ public class AndroidOPiPActivity extends AppCompatActivity {
                 switch (playState) {
                     case VideoView.STATE_PAUSED:
                         updatePictureInPictureActions(
-                                R.drawable.dkplayer_ic_action_play_arrow, "播放", CONTROL_TYPE_PLAY, REQUEST_PLAY);
+                                xyz.doikki.videocontroller.R.drawable.dkplayer_ic_action_play_arrow, "播放", CONTROL_TYPE_PLAY, REQUEST_PLAY);
                         break;
                     case VideoView.STATE_PLAYING:
                         updatePictureInPictureActions(
-                                R.drawable.dkplayer_ic_action_pause, "暂停", CONTROL_TYPE_PAUSE, REQUEST_PAUSE);
+                                xyz.doikki.videocontroller.R.drawable.dkplayer_ic_action_pause, "暂停", CONTROL_TYPE_PAUSE, REQUEST_PAUSE);
                         break;
                     case VideoView.STATE_PLAYBACK_COMPLETED:
                         updatePictureInPictureActions(
-                                R.drawable.dkplayer_ic_action_replay, "重新播放", CONTROL_TYPE_REPLAY, REQUEST_REPLAY);
+                                xyz.doikki.videocontroller.R.drawable.dkplayer_ic_action_replay, "重新播放", CONTROL_TYPE_REPLAY, REQUEST_REPLAY);
                         break;
                 }
             }
